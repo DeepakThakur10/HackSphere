@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import {
   ArrowLeft,
   Award,
+  Mail,
   Plus,
   ShieldAlert,
   Trash2,
@@ -38,6 +39,7 @@ export default function AssignJudgesPage() {
   const [assignedJudges, setAssignedJudges] = useState([]);
   const [availableJudges, setAvailableJudges] = useState([]);
   const [selectedJudgeId, setSelectedJudgeId] = useState('');
+  const [emailInput, setEmailInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -78,7 +80,7 @@ export default function AssignJudgesPage() {
     };
   }, [hackathonId]);
 
-  const handleAssignJudge = async () => {
+  const handleAssignJudgeById = async () => {
     if (!selectedJudgeId) {
       toast.error('Select a judge to assign');
       return;
@@ -86,12 +88,31 @@ export default function AssignJudgesPage() {
 
     try {
       setBusy(true);
-      const res = await assignJudgeRequest(hackathonId, selectedJudgeId);
+      const res = await assignJudgeRequest(hackathonId, { judgeId: selectedJudgeId });
       setAssignedJudges(res.data.data);
       setSelectedJudgeId('');
       toast.success('Judge assigned successfully');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to assign judge');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleAssignJudgeByEmail = async () => {
+    if (!emailInput.trim()) {
+      toast.error('Enter a valid judge email address');
+      return;
+    }
+
+    try {
+      setBusy(true);
+      const res = await assignJudgeRequest(hackathonId, { email: emailInput.trim() });
+      setAssignedJudges(res.data.data);
+      setEmailInput('');
+      toast.success(res.data.message || 'Judge assigned successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to assign judge by email');
     } finally {
       setBusy(false);
     }
@@ -150,11 +171,43 @@ export default function AssignJudgesPage() {
             />
           ) : (
             <>
-              {/* 1. Assign New Judge Card */}
+              {/* 1. Assign Judge via Email Input */}
+              <FormSection
+                icon={Mail}
+                title="Add Judge by Email Address"
+                description="Type ANY email address to invite and assign a judge to this event."
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-4 top-3.5 h-4 w-4 text-text-muted" />
+                    <input
+                      type="email"
+                      placeholder="e.g. expert.judge@domain.com"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      disabled={busy}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAssignJudgeByEmail();
+                        }
+                      }}
+                      className="w-full rounded-2xl border border-border bg-white pl-11 pr-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300"
+                    />
+                  </div>
+
+                  <Button type="button" size="md" onClick={handleAssignJudgeByEmail} disabled={busy || !emailInput.trim()}>
+                    <Plus className="h-4 w-4" />
+                    Assign via Email
+                  </Button>
+                </div>
+              </FormSection>
+
+              {/* 2. Select from Roster */}
               <FormSection
                 icon={UserCheck}
-                title="Assign Judge to Event"
-                description="Select a judge or organizer account to add to the panel"
+                title="Select Existing Platform Judge"
+                description="Or select from registered platform judges and organizers"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <select
@@ -163,7 +216,7 @@ export default function AssignJudgesPage() {
                     disabled={busy}
                     className="flex-1 rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300"
                   >
-                    <option value="">Select available judge...</option>
+                    <option value="">Select registered judge...</option>
                     {unassignedJudges.map((j) => (
                       <option key={j._id} value={j._id}>
                         {j.firstName} {j.lastName} (@{j.username}) — {capitalize(j.role)}
@@ -171,24 +224,24 @@ export default function AssignJudgesPage() {
                     ))}
                   </select>
 
-                  <Button type="button" size="md" onClick={handleAssignJudge} disabled={busy || !selectedJudgeId}>
+                  <Button type="button" variant="secondary" size="md" onClick={handleAssignJudgeById} disabled={busy || !selectedJudgeId}>
                     <Plus className="h-4 w-4" />
-                    Assign Judge
+                    Assign Selected
                   </Button>
                 </div>
               </FormSection>
 
-              {/* 2. Assigned Judges Panel */}
+              {/* 3. Assigned Judges Panel */}
               <FormSection
                 icon={Award}
-                title={`Assigned Judges (${assignedJudges.length})`}
-                description="Active evaluation panel for this event"
+                title={`Active Panel Judges (${assignedJudges.length})`}
+                description="Assigned evaluation panel for this event"
               >
                 {assignedJudges.length === 0 ? (
                   <EmptyState
                     icon={Users}
                     title="No judges assigned yet"
-                    description="Assign judges using the dropdown above to allow them to review project entries."
+                    description="Assign judges using email address or dropdown selection above to open evaluation forms."
                   />
                 ) : (
                   <div className="divide-y divide-border">

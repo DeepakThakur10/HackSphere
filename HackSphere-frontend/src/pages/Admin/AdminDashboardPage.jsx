@@ -103,25 +103,25 @@ export default function AdminDashboardPage() {
                 <StatCard
                   label="Total Platform Users"
                   icon={Users}
-                  value={metrics?.users?.total || 0}
+                  value={metrics?.users?.total ?? 0}
                   helpText="Registered user accounts"
                 />
                 <StatCard
                   label="Total Hackathons"
                   icon={LayoutGrid}
-                  value={metrics?.hackathons?.total || 0}
+                  value={metrics?.hackathons?.total ?? 0}
                   helpText="Events created"
                 />
                 <StatCard
                   label="Total Submissions"
                   icon={FileCode}
-                  value={metrics?.activity?.submissions || 0}
+                  value={metrics?.activity?.submissions ?? 0}
                   helpText="Project entries"
                 />
                 <StatCard
                   label="Judge Reviews"
                   icon={Award}
-                  value={metrics?.activity?.reviews || 0}
+                  value={metrics?.activity?.reviews ?? 0}
                   helpText="Evaluations submitted"
                 />
               </div>

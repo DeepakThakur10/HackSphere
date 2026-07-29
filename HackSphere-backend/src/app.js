@@ -9,6 +9,7 @@ import judgeRoutes from "./routes/judge.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 
@@ -35,5 +36,8 @@ app.use("/api/judges", judgeRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
+
+// Centralized Express Error Handling Middleware
+app.use(errorHandler);
 
 export default app;

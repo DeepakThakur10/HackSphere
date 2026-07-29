@@ -51,3 +51,12 @@ export function getOrganizerName(createdBy) {
   const fullName = [createdBy.firstName, createdBy.lastName].filter(Boolean).join(' ');
   return fullName || createdBy.email || 'HackSphere Organizer';
 }
+
+export function formatImageUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const backendBase = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:3000';
+  return `${backendBase}${url.startsWith('/') ? '' : '/'}${url}`;
+}

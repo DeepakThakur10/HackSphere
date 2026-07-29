@@ -20,6 +20,26 @@ const registrationSchema = new Schema(
             trim: true,
         },
 
+        memberEmails: [
+            {
+                type: String,
+                trim: true,
+                lowercase: true,
+            },
+        ],
+
+        paymentProof: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        paymentStatus: {
+            type: String,
+            enum: ["pending", "verified", "failed"],
+            default: "verified",
+        },
+
         team: {
             type: Schema.Types.ObjectId,
             ref: "Team",

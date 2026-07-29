@@ -19,6 +19,9 @@ import ProjectSubmissionPage from '../pages/Participant/ProjectSubmissionPage';
 import JudgeDashboardPage from '../pages/Judge/JudgeDashboardPage';
 import ProjectEvaluationPage from '../pages/Judge/ProjectEvaluationPage';
 import LeaderboardPage from '../pages/Leaderboard/LeaderboardPage';
+import AdminDashboardPage from '../pages/Admin/AdminDashboardPage';
+import AdminUsersPage from '../pages/Admin/AdminUsersPage';
+import AdminHackathonsPage from '../pages/Admin/AdminHackathonsPage';
 import NotFoundPage from '../pages/NotFound/NotFoundPage';
 
 export default function AppRoutes() {
@@ -53,6 +56,11 @@ export default function AppRoutes() {
           {/* Judge Routes */}
           <Route path="/judge/dashboard" element={<JudgeDashboardPage />} />
           <Route path="/judge/submissions/:submissionId/evaluate" element={<ProjectEvaluationPage />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route path="/admin/hackathons" element={<AdminHackathonsPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

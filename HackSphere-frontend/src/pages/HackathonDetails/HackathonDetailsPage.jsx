@@ -7,7 +7,9 @@ import {
   CheckCircle2,
   Clock,
   Layers3,
+  LayoutDashboard,
   MapPin,
+  Settings,
   Share2,
   ShieldCheck,
   Sparkles,
@@ -22,7 +24,12 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import RegistrationModal from '../../components/registration/RegistrationModal';
 import { useAuth } from '../../context/authContext';
-import { getHackathonByIdRequest, registerForHackathonRequest } from '../../services/api';
+import { formatImageUrl } from '../../utils/format';
+import {
+  getHackathonByIdRequest,
+  getRegistrationsRequest,
+  registerForHackathonRequest,
+} from '../../services/api';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -93,8 +100,9 @@ export default function HackathonDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [hackathon, setHackathon] = useState(null);
+  const [myRegistration, setMyRegistration] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,10 +114,17 @@ export default function HackathonDetailsPage() {
     const loadHackathon = async () => {
       try {
         setLoading(true);
-        const response = await getHackathonByIdRequest(id);
+        const [hackRes, regRes] = await Promise.all([
+          getHackathonByIdRequest(id),
+          isAuthenticated ? getRegistrationsRequest().catch(() => ({ data: { data: [] } })) : Promise.resolve({ data: { data: [] } }),
+        ]);
 
         if (active) {
-          setHackathon(response.data.data);
+          setHackathon(hackRes.data.data);
+          const foundReg = regRes.data?.data?.find(
+            (r) => (r.hackathon?._id || r.hackathon) === id
+          );
+          setMyRegistration(foundReg || null);
           setError('');
         }
       } catch (requestError) {
@@ -128,7 +143,7 @@ export default function HackathonDetailsPage() {
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -143,6 +158,11 @@ export default function HackathonDetailsPage() {
   };
 
   const handleRegister = () => {
+    if (isHostOrganizer) {
+      toast.error('As the host organizer, you manage this event and cannot register as a participant.');
+      return;
+    }
+
     if (!isRegistrationOpen(hackathon)) {
       toast.error('Registration is closed for this hackathon');
       return;
@@ -156,15 +176,21 @@ export default function HackathonDetailsPage() {
     setIsModalOpen(true);
   };
 
-  const handleRegistrationSubmit = async ({ teamName }) => {
+  const handleRegistrationSubmit = async ({ teamName, memberEmails, paymentProof } = {}) => {
     if (submitting) {
       return;
     }
 
     try {
       setSubmitting(true);
-      await registerForHackathonRequest({ hackathonId: hackathon._id, teamName });
-      toast.success('Registered successfully!');
+      const res = await registerForHackathonRequest({
+        hackathonId: hackathon._id,
+        teamName,
+        memberEmails,
+        paymentProof,
+      });
+      setMyRegistration(res.data.data);
+      toast.success(res.data.message || 'Registered successfully!');
       setIsModalOpen(false);
     } catch (requestError) {
       toast.error(requestError.response?.data?.message || 'Unable to register for this hackathon');
@@ -174,6 +200,8 @@ export default function HackathonDetailsPage() {
   };
 
   const isOpen = isRegistrationOpen(hackathon);
+  const hostId = hackathon?.createdBy?._id || hackathon?.createdBy;
+  const isHostOrganizer = user && hostId && String(hostId) === String(user.id || user._id);
 
   return (
     <section className="pb-16 text-text-primary">
@@ -215,7 +243,7 @@ export default function HackathonDetailsPage() {
               <Card className="overflow-hidden p-0">
                 <div className="relative flex h-56 items-end justify-start overflow-hidden bg-brand-50 sm:h-72">
                   {hackathon.banner ? (
-                    <img src={hackathon.banner} alt={hackathon.title} className="absolute inset-0 h-full w-full object-cover" />
+                    <img src={formatImageUrl(hackathon.banner)} alt={hackathon.title} className="absolute inset-0 h-full w-full object-cover" />
                   ) : (
                     <Sparkles className="absolute right-8 top-8 h-16 w-16 text-brand-300/40" />
                   )}
@@ -225,6 +253,15 @@ export default function HackathonDetailsPage() {
                   <div className="flex flex-wrap gap-2">
                     <Badge>{getStatusLabel(hackathon.status)}</Badge>
                     <Badge className="bg-surfaceMuted text-text-secondary border-border">{capitalize(hackathon.mode)}</Badge>
+                    {isHostOrganizer ? (
+                      <Badge className="bg-brand-50 text-brand-700 border-brand-200 font-semibold">
+                        Host Organizer Workspace
+                      </Badge>
+                    ) : myRegistration ? (
+                      <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                        Registered ({capitalize(myRegistration.status)})
+                      </Badge>
+                    ) : null}
                   </div>
 
                   <div className="space-y-3">
@@ -233,15 +270,36 @@ export default function HackathonDetailsPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-3 pt-2">
-                    <Button
-                      type="button"
-                      size="lg"
-                      disabled={!isOpen}
-                      onClick={handleRegister}
-                      className={!isOpen ? 'opacity-60 cursor-not-allowed' : ''}
-                    >
-                      {isOpen ? 'Register now' : 'Registration closed'}
-                    </Button>
+                    {isHostOrganizer ? (
+                      <Button
+                        as={Link}
+                        to={`/organizer/hackathons/${hackathon._id}/manage`}
+                        size="lg"
+                      >
+                        <Settings className="h-4 w-4" />
+                        Manage Hackathon
+                      </Button>
+                    ) : myRegistration ? (
+                      <Button
+                        as={Link}
+                        to={`/hackathons/${hackathon._id}/workspace`}
+                        size="lg"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Go to Workspace ({capitalize(myRegistration.status)})
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="lg"
+                        disabled={!isOpen}
+                        onClick={handleRegister}
+                        className={!isOpen ? 'opacity-60 cursor-not-allowed' : ''}
+                      >
+                        {isOpen ? 'Register now' : 'Registration closed'}
+                      </Button>
+                    )}
+
                     <Button
                       as={Link}
                       to={`/hackathons/${hackathon._id}/leaderboard`}
@@ -348,8 +406,46 @@ export default function HackathonDetailsPage() {
                 </div>
               </Card>
 
-              {/* 3. Register CTA Banner */}
-              {isOpen ? (
+              {/* 3. Register / Registered / Host CTA Banner */}
+              {isHostOrganizer ? (
+                <Card className="border-brand-200 bg-brand-50/60 p-6 sm:p-8">
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 mb-2">
+                        <Settings className="h-4 w-4" />
+                        Host Organizer Workspace
+                      </div>
+                      <h2 className="text-xl font-semibold text-text-primary">You are the host organizer of this hackathon</h2>
+                      <p className="mt-1 text-sm text-text-secondary">
+                        Access your organizer control panel to review registrations, assign judges, and transition event lifecycles.
+                      </p>
+                    </div>
+
+                    <Button as={Link} to={`/organizer/hackathons/${hackathon._id}/manage`} size="lg" className="shrink-0">
+                      Manage Hackathon
+                    </Button>
+                  </div>
+                </Card>
+              ) : myRegistration ? (
+                <Card className="border-brand-200 bg-brand-50/60 p-6 sm:p-8">
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 mb-2">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Registration Confirmed ({capitalize(myRegistration.status)})
+                      </div>
+                      <h2 className="text-xl font-semibold text-text-primary">You are registered for this event</h2>
+                      <p className="mt-1 text-sm text-text-secondary">
+                        Access your hacker command center to manage your team roster and submit project entries.
+                      </p>
+                    </div>
+
+                    <Button as={Link} to={`/hackathons/${hackathon._id}/workspace`} size="lg" className="shrink-0">
+                      Go to Workspace
+                    </Button>
+                  </div>
+                </Card>
+              ) : isOpen ? (
                 <Card className="border-brand-200 bg-brand-50/60 p-6 sm:p-8">
                   <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                     <div>

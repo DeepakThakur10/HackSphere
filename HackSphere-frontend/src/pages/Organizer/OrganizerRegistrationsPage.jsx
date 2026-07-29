@@ -258,6 +258,25 @@ export default function OrganizerRegistrationsPage() {
                                   ) : null}
                                 </div>
                               ) : null}
+
+                              {Array.isArray(reg.memberEmails) && reg.memberEmails.length > 0 ? (
+                                <p className="text-xs text-text-muted">
+                                  Invited Teammates: {reg.memberEmails.join(', ')}
+                                </p>
+                              ) : null}
+
+                              {reg.paymentProof ? (
+                                <div className="pt-1">
+                                  <a
+                                    href={reg.paymentProof}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                                  >
+                                    View Payment Receipt / Proof
+                                  </a>
+                                </div>
+                              ) : null}
                             </div>
                           </div>
 

@@ -1,6 +1,7 @@
 import User from "../../models/user.js";
 import HackathonJudge from "../../models/HackathonJudge.js";
 import Hackathon from "../../models/Hackathon.js";
+import bcrypt from "bcrypt";
 
 export const getAvailableJudges = async (req, res) => {
   try {
@@ -45,18 +46,46 @@ export const getAssignedJudges = async (req, res) => {
 export const assignJudgeToHackathon = async (req, res) => {
   try {
     const { id } = req.params;
-    const { judgeId } = req.body;
+    const { judgeId, email } = req.body;
 
-    if (!judgeId) {
-      return res.status(400).json({ success: false, message: "Judge ID is required" });
+    if (!judgeId && (!email || !email.trim())) {
+      return res.status(400).json({ success: false, message: "Judge ID or Email address is required" });
     }
 
-    const judgeUser = await User.findById(judgeId);
+    let judgeUser = null;
+
+    if (email && email.trim()) {
+      const targetEmail = email.toLowerCase().trim();
+      judgeUser = await User.findOne({ email: targetEmail });
+
+      if (!judgeUser) {
+        // Automatically register new user as judge if account does not exist yet
+        const hashedPassword = await bcrypt.hash("Judge@12345", 10);
+        const namePart = targetEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
+        const uniqueUsername = `${namePart}_judge_${Date.now().toString().slice(-4)}`;
+
+        judgeUser = await User.create({
+          firstName: namePart,
+          lastName: "Judge",
+          email: targetEmail,
+          username: uniqueUsername,
+          password: hashedPassword,
+          role: "judge",
+        });
+      } else if (judgeUser.role === "participant") {
+        // Upgrade role to judge
+        judgeUser.role = "judge";
+        await judgeUser.save();
+      }
+    } else if (judgeId) {
+      judgeUser = await User.findById(judgeId);
+    }
+
     if (!judgeUser) {
       return res.status(404).json({ success: false, message: "Judge user not found" });
     }
 
-    const existing = await HackathonJudge.findOne({ hackathon: id, judge: judgeId });
+    const existing = await HackathonJudge.findOne({ hackathon: id, judge: judgeUser._id });
     if (existing) {
       if (existing.status === "removed") {
         existing.status = "assigned";
@@ -68,7 +97,7 @@ export const assignJudgeToHackathon = async (req, res) => {
     } else {
       await HackathonJudge.create({
         hackathon: id,
-        judge: judgeId,
+        judge: judgeUser._id,
         assignedBy: req.user.id,
         status: "assigned",
       });
@@ -79,7 +108,7 @@ export const assignJudgeToHackathon = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Judge assigned successfully",
+      message: `Judge ${judgeUser.email} assigned successfully`,
       data: updatedAssignments,
     });
   } catch (error) {

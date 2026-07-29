@@ -43,7 +43,8 @@ export const updateHackathonStatusRequest = (id, status) => api.patch(`/hackatho
 
 export const deleteHackathonRequest = (id) => api.delete(`/hackathons/${id}`);
 
-export const registerForHackathonRequest = ({ hackathonId }) => api.post('/registrations', { hackathonId });
+export const registerForHackathonRequest = ({ hackathonId, teamName, memberEmails, paymentProof }) =>
+  api.post('/registrations', { hackathonId, teamName, memberEmails, paymentProof });
 
 export const getRegistrationsRequest = () => api.get('/registrations');
 
@@ -84,7 +85,8 @@ export const getAvailableJudgesRequest = () => api.get('/judges');
 
 export const getAssignedJudgesRequest = (hackathonId) => api.get(`/judges/hackathon/${hackathonId}`);
 
-export const assignJudgeRequest = (hackathonId, judgeId) => api.post(`/judges/hackathon/${hackathonId}`, { judgeId });
+export const assignJudgeRequest = (hackathonId, payload) =>
+  api.post(`/judges/hackathon/${hackathonId}`, typeof payload === 'string' ? { judgeId: payload } : payload);
 
 export const removeJudgeRequest = (hackathonId, judgeId) => api.delete(`/judges/hackathon/${hackathonId}/${judgeId}`);
 

@@ -299,7 +299,18 @@ export default function DashboardPage() {
                   : "Here's a quick look at your hackathon journey — track registrations, manage teams, and discover new events."
               }
               actions={
-                isOrganizer ? (
+                profile?.role === 'admin' ? (
+                  <>
+                    <Button as={Link} to="/admin/dashboard" size="lg">
+                      <ShieldCheck className="h-4 w-4" />
+                      Admin Console
+                    </Button>
+                    <Button as={Link} to="/hackathons/create" variant="secondary" size="lg">
+                      <PlusCircle className="h-4 w-4" />
+                      Create hackathon
+                    </Button>
+                  </>
+                ) : isOrganizer ? (
                   <>
                     <Button as={Link} to="/hackathons/create" size="lg">
                       <PlusCircle className="h-4 w-4" />
@@ -347,25 +358,25 @@ export default function DashboardPage() {
                   <StatCard
                     label="Total Hackathons"
                     icon={LayoutGrid}
-                    value={organizerMetrics ? organizerMetrics.totalHackathons : '—'}
+                    value={organizerMetrics?.totalHackathons ?? 0}
                     helpText="Events created"
                   />
                   <StatCard
                     label="Published Hackathons"
                     icon={CheckCircle2}
-                    value={organizerMetrics ? organizerMetrics.published : '—'}
+                    value={organizerMetrics?.published ?? 0}
                     helpText="Active on platform"
                   />
                   <StatCard
                     label="Draft Hackathons"
                     icon={FileClock}
-                    value={organizerMetrics ? organizerMetrics.drafts : '—'}
+                    value={organizerMetrics?.drafts ?? 0}
                     helpText="In progress"
                   />
                   <StatCard
                     label="Total Registrations"
                     icon={Users}
-                    value={organizerMetrics ? organizerMetrics.registrations : '—'}
+                    value={organizerMetrics?.registrations ?? 0}
                     helpText="Hacker applications"
                   />
                 </div>
