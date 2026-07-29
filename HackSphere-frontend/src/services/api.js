@@ -99,6 +99,23 @@ export const getLeaderboardRequest = (hackathonId) => api.get(`/hackathons/${hac
 
 export const getWinnersRequest = (hackathonId) => api.get(`/hackathons/${hackathonId}/winners`);
 
+// Phase 6 Admin Console API Endpoints
+export const getAdminDashboardMetricsRequest = () => api.get('/admin/dashboard');
+
+export const getAdminAuditLogsRequest = () => api.get('/admin/audit-logs');
+
+export const getAdminUsersRequest = (params) => api.get('/admin/users', { params });
+
+export const toggleUserBlockStatusRequest = (userId) => api.patch(`/admin/users/${userId}/block`);
+
+export const updateUserRoleRequest = (userId, role) => api.patch(`/admin/users/${userId}/role`, { role });
+
+export const getAdminHackathonsRequest = () => api.get('/admin/hackathons');
+
+export const adminOverrideHackathonStatusRequest = (hackathonId, status) => api.patch(`/admin/hackathons/${hackathonId}/status`, { status });
+
+export const adminDeleteHackathonRequest = (hackathonId) => api.delete(`/admin/hackathons/${hackathonId}`);
+
 export const uploadImageRequest = (formData) =>
   api.post('/upload/image', formData, {
     headers: {

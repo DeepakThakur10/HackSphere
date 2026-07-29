@@ -7,6 +7,7 @@ import teamRoutes from "./routes/team.routes.js";
 import submissionRoutes from "./routes/submission.routes.js";
 import judgeRoutes from "./routes/judge.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/judges", judgeRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 
 export default app;
