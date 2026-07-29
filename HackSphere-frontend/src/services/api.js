@@ -23,6 +23,8 @@ export const signupRequest = (payload) => api.post('/auth/signup', payload);
 
 export const getProfileRequest = () => api.get('/auth/profile');
 
+export const updateProfileRequest = (payload) => api.put('/auth/profile', payload);
+
 export const getHackathonsRequest = (params) => api.get('/hackathons', { params });
 
 export const getHackathonByIdRequest = (id) => api.get(`/hackathons/${id}`);
@@ -30,5 +32,7 @@ export const getHackathonByIdRequest = (id) => api.get(`/hackathons/${id}`);
 export const registerForHackathonRequest = ({ hackathonId, teamName }) => api.post('/registrations', { hackathonId, teamName });
 
 export const getRegistrationsRequest = () => api.get('/registrations');
+
+export const uploadImageRequest = (formData) => api.post('/upload/image', formData);
 
 export default api;

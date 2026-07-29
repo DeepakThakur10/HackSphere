@@ -1,118 +1,338 @@
-# HackSphere
+# 🚀 HackSphere
 
-HackSphere is a full-stack hackathon discovery and management platform.
-The project currently includes a React + Vite frontend and an Express + MongoDB backend.
+HackSphere is a full-stack MERN-based hackathon discovery and management platform that enables students to discover hackathons, register for events, and allows organizers to create and manage hackathons through a modern, scalable web application.
 
-## What Is Done So Far
+The project is being developed with a **feature-first approach**, prioritizing business logic, clean architecture, and scalability before UI polish.
 
-- Frontend app shell with routing, layout, and landing page sections.
-- Backend API with auth and hackathon routes.
-- Login and signup forms connected to the backend.
-- Featured hackathons section now loads live data from the backend.
-- Auth state persists the backend token and user payload in local storage.
-- Backend CORS is enabled for local frontend development.
+---
 
-## Tech Stack
+# ✨ Features
 
-- Frontend: React, Vite, React Router DOM, Tailwind CSS, Axios, React Hot Toast, React Hook Form, Lucide React
-- Backend: Node.js, Express, MongoDB, Mongoose, JWT, bcrypt, CORS
+## 👨‍🎓 Student
 
-## Project Structure
+- User Authentication (Signup/Login)
+- JWT-based Authorization
+- Browse Published Hackathons
+- View Hackathon Details
+- Register for Hackathons
+- Persistent Login
+- Profile Management *(In Progress)*
+
+---
+
+## 👨‍💼 Organizer *(Upcoming)*
+
+- Organizer Dashboard
+- Create Hackathons
+- Edit Hackathons
+- Delete Hackathons
+- View Registered Participants
+
+---
+
+## 👑 Admin *(Upcoming)*
+
+- Manage Users
+- Manage Hackathons
+- Platform Analytics
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
+- React 19
+- Vite
+- React Router DOM
+- Tailwind CSS
+- Axios
+- React Hook Form
+- React Hot Toast
+- Lucide React
+
+---
+
+## Backend
+
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JWT Authentication
+- bcrypt
+- Multer
+- Cloudinary
+- CORS
+
+---
+
+# 📁 Project Structure
 
 ```text
-HackSphere-backend/
-  src/
-    app.js
-    server.js
-    config/
-    controllers/
-    middleware/
-    models/
-    routes/
+HackSphere/
 
-HackSphere-frontend/
-  src/
-    App.jsx
-    main.jsx
-    components/
-    constants/
-    context/
-    layouts/
-    pages/
-    routes/
-    services/
+├── HackSphere-frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── constants/
+│   │   ├── context/
+│   │   ├── layouts/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   └── package.json
+│
+├── HackSphere-backend/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── app.js
+│   │   └── server.js
+│   └── package.json
+│
+└── README.md
 ```
 
-## Local Setup
+---
+
+# 🚀 Current Progress
+
+## ✅ Completed
+
+### Authentication
+
+- User Signup
+- User Login
+- JWT Authentication
+- Protected Routes
+- Guest Routes
+- Persistent Authentication
+
+---
+
+### Landing Page
+
+- Hero Section
+- Features Section
+- Featured Hackathons
+- Backend Integration
+
+---
+
+### Hackathons
+
+- List Published Hackathons
+- Hackathon Details
+- Registration Flow
+
+---
 
 ### Backend
 
-```bash
-cd HackSphere-backend
-npm install
-npm run dev
-```
+- Authentication APIs
+- Hackathon CRUD APIs
+- Registration APIs
+- Generic Image Upload API
+- Cloudinary Integration
+- Multer Middleware
 
-### Frontend
+---
 
-```bash
-cd HackSphere-frontend
-npm install
-npm run dev
-```
+# 🔌 API Endpoints
 
-## Environment Variables
+## Authentication
 
-### Backend
+| Method | Endpoint |
+|---------|----------|
+| POST | `/api/auth/signup` |
+| POST | `/api/auth/login` |
+| GET | `/api/auth/profile` |
+| PUT | `/api/auth/profile` |
+| GET | `/api/auth/admin` |
 
-Create a `.env` file inside `HackSphere-backend` with values like:
+---
+
+## Hackathons
+
+| Method | Endpoint |
+|---------|----------|
+| GET | `/api/hackathons` |
+| GET | `/api/hackathons/:id` |
+| POST | `/api/hackathons` |
+| PUT | `/api/hackathons/:id` |
+| DELETE | `/api/hackathons/:id` |
+
+---
+
+## Registrations
+
+| Method | Endpoint |
+|---------|----------|
+| POST | `/api/registrations` |
+| GET | `/api/registrations` |
+
+---
+
+## Upload
+
+| Method | Endpoint |
+|---------|----------|
+| POST | `/api/upload/image` |
+
+---
+
+# 🌐 Environment Variables
+
+## Backend (`HackSphere-backend/.env`)
 
 ```env
 PORT=3000
+
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
+
+JWT_SECRET=your_secret_key
+
 FRONTEND_URL=http://localhost:5173
+
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+
+CLOUDINARY_API_KEY=your_api_key
+
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-### Frontend
+---
 
-The frontend defaults to `http://localhost:3000/api`, but you can override it with:
+## Frontend (`HackSphere-frontend/.env`)
 
 ```env
 VITE_API_BASE_URL=http://localhost:3000/api
 ```
 
-## API Endpoints
+---
 
-### Auth
+# ⚙️ Local Setup
 
-- `POST /api/auth/signup`
-- `POST /api/auth/login`
-- `GET /api/auth/profile`
-- `GET /api/auth/admin`
+## Backend
 
-### Hackathons
+```bash
+cd HackSphere-backend
 
-- `POST /api/hackathons`
-- `GET /api/hackathons`
-- `GET /api/hackathons/:id`
-- `PUT /api/hackathons/:id`
-- `DELETE /api/hackathons/:id`
+npm install
 
-## Current Frontend Flow
+npm run dev
+```
 
-- The login page sends credentials to the backend and stores the returned token and user data.
-- The signup page creates a new user using the backend registration endpoint.
-- The featured hackathons section fetches published hackathons from the API and renders them on the landing page.
+Backend runs on:
 
-## Current Backend Status
+```
+http://localhost:3000
+```
 
-- Auth login and signup are implemented.
-- Published hackathons can be listed from the database.
-- The profile route currently returns a placeholder response and can be expanded next.
+---
 
-## Notes
+## Frontend
 
-- Frontend development server: `http://localhost:5173`
-- Backend development server: `http://localhost:3000`
-- The frontend API client uses `hacksphere_token` and `hacksphere_user` in local storage.
+```bash
+cd HackSphere-frontend
+
+npm install
+
+npm run dev
+```
+
+Frontend runs on:
+
+```
+http://localhost:5173
+```
+
+---
+
+# 📌 Development Workflow
+
+This project follows a **feature-first development approach**.
+
+Priority:
+
+1. Business Logic
+2. Authentication
+3. Student Features
+4. Organizer Features
+5. Admin Features
+6. UI Polish
+7. Animations
+
+---
+
+# 📍 Current Roadmap
+
+## 🔄 In Progress
+
+- Profile Page
+- Avatar Upload
+- Profile Editing
+
+---
+
+## ⏳ Upcoming
+
+- Organizer Dashboard
+- Create Hackathon
+- Edit Hackathon
+- Delete Hackathon
+- View Participants
+- Admin Dashboard
+- Team Management
+- Notifications
+- Certificates
+- Search & Filters
+
+---
+
+# 📖 Coding Guidelines
+
+- Build one feature at a time.
+- Avoid modifying unrelated files.
+- Keep components modular and reusable.
+- Use async/await for asynchronous code.
+- Keep API calls inside `services/api.js`.
+- Follow existing project structure and coding style.
+- Write production-ready code.
+
+---
+
+# 🤝 Contributing
+
+Contributions, suggestions, and improvements are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Open a Pull Request.
+
+---
+
+# 📜 License
+
+This project is developed for learning, portfolio, and hackathon purposes.
+
+---
+
+# 👨‍💻 Author
+
+**Deepak Kumar**
+
+- GitHub: https://github.com/DeepakThakur10
+
+---
+
+⭐ If you like this project, consider giving it a star on GitHub!

@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRoutes from "./routes/auth.routes.js";
 import hackathonRoutes from "./routes/hackathon.routes.js";
 import registrationRoutes from "./routes/registration.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
 
 const app = express();
 
@@ -23,5 +24,6 @@ app.get('/',(req,res)=>{
 app.use("/api/auth", authRoutes);
 app.use("/api/hackathons",hackathonRoutes)
 app.use("/api/registrations", registrationRoutes);
+app.use("/api/upload", uploadRoutes);
 
 export default app;
