@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   Calendar,
   Compass,
@@ -15,6 +16,9 @@ import {
   CheckCircle2,
   FileClock,
   Rocket,
+  UserPlus,
+  Settings,
+  LayoutDashboard,
 } from 'lucide-react';
 import PageContainer from '../../components/common/PageContainer';
 import PageHero from '../../components/common/PageHero';
@@ -28,6 +32,9 @@ import {
   getRegistrationsRequest,
   getHackathonsRequest,
   getOrganizerHackathonsRequest,
+  getOrganizerMetricsRequest,
+  createTeamRequest,
+  joinTeamRequest,
 } from '../../services/api';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -35,29 +42,6 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
   year: 'numeric',
 });
-
-const organizerStatCards = [
-  {
-    key: 'total',
-    label: 'Total Hackathons',
-    icon: LayoutGrid,
-  },
-  {
-    key: 'published',
-    label: 'Published Hackathons',
-    icon: CheckCircle2,
-  },
-  {
-    key: 'draft',
-    label: 'Draft Hackathons',
-    icon: FileClock,
-  },
-  {
-    key: 'registrations',
-    label: 'Total Registrations',
-    icon: Users,
-  },
-];
 
 function capitalize(value) {
   if (!value) {
@@ -83,6 +67,7 @@ function getHackathonStatusLabel(status) {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,8 +78,15 @@ export default function DashboardPage() {
   const [discoverError, setDiscoverError] = useState('');
 
   const [organizerHackathons, setOrganizerHackathons] = useState([]);
+  const [organizerMetrics, setOrganizerMetrics] = useState(null);
   const [organizerHackathonsLoading, setOrganizerHackathonsLoading] = useState(true);
   const [organizerHackathonsError, setOrganizerHackathonsError] = useState('');
+
+  // Team management state
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [createTeamNameInput, setCreateTeamNameInput] = useState('');
+  const [activeHackathonForTeam, setActiveHackathonForTeam] = useState(null);
+  const [teamBusy, setTeamBusy] = useState(false);
 
   const registrationsRef = useRef(null);
   const organizerSectionRef = useRef(null);
@@ -169,9 +161,13 @@ export default function DashboardPage() {
   const loadOrganizerHackathons = useCallback(async () => {
     try {
       setOrganizerHackathonsLoading(true);
-      const response = await getOrganizerHackathonsRequest();
+      const [listRes, metricsRes] = await Promise.all([
+        getOrganizerHackathonsRequest(),
+        getOrganizerMetricsRequest(),
+      ]);
 
-      setOrganizerHackathons(response.data.data);
+      setOrganizerHackathons(listRes.data.data);
+      setOrganizerMetrics(metricsRes.data.data);
       setOrganizerHackathonsError('');
     } catch (requestError) {
       setOrganizerHackathonsError(requestError.response?.data?.message || 'Unable to load your hackathons');
@@ -197,6 +193,48 @@ export default function DashboardPage() {
       active = false;
     };
   }, [profile?.role, loadOrganizerHackathons]);
+
+  const handleCreateTeam = async (hackathonId) => {
+    if (!createTeamNameInput.trim()) {
+      toast.error('Enter a team name');
+      return;
+    }
+
+    try {
+      setTeamBusy(true);
+      const res = await createTeamRequest({
+        name: createTeamNameInput.trim(),
+        hackathonId,
+      });
+      toast.success('Team created successfully!');
+      setCreateTeamNameInput('');
+      setActiveHackathonForTeam(null);
+      navigate(`/teams/${res.data.data._id}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create team');
+    } finally {
+      setTeamBusy(false);
+    }
+  };
+
+  const handleJoinTeam = async () => {
+    if (!joinCodeInput.trim()) {
+      toast.error('Enter a valid team invite code');
+      return;
+    }
+
+    try {
+      setTeamBusy(true);
+      const res = await joinTeamRequest({ inviteCode: joinCodeInput.trim() });
+      toast.success('Joined team successfully!');
+      setJoinCodeInput('');
+      navigate(`/teams/${res.data.data._id}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to join team');
+    } finally {
+      setTeamBusy(false);
+    }
+  };
 
   const isOrganizer = profile?.role === 'organizer' || profile?.role === 'admin';
 
@@ -258,7 +296,7 @@ export default function DashboardPage() {
               description={
                 isOrganizer
                   ? "Here's a quick look at your organizer activity — track your hackathons, keep an eye on registrations, and publish new events when you're ready."
-                  : "Here's a quick look at your hackathon journey — track registrations, discover new events, and keep your profile fresh."
+                  : "Here's a quick look at your hackathon journey — track registrations, manage teams, and discover new events."
               }
               actions={
                 isOrganizer ? (
@@ -306,15 +344,30 @@ export default function DashboardPage() {
 
                 {/* Stat Cards */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {organizerStatCards.map((stat) => (
-                    <StatCard
-                      key={stat.key}
-                      label={stat.label}
-                      icon={stat.icon}
-                      value="—"
-                      helpText="Live data coming soon"
-                    />
-                  ))}
+                  <StatCard
+                    label="Total Hackathons"
+                    icon={LayoutGrid}
+                    value={organizerMetrics ? organizerMetrics.totalHackathons : '—'}
+                    helpText="Events created"
+                  />
+                  <StatCard
+                    label="Published Hackathons"
+                    icon={CheckCircle2}
+                    value={organizerMetrics ? organizerMetrics.published : '—'}
+                    helpText="Active on platform"
+                  />
+                  <StatCard
+                    label="Draft Hackathons"
+                    icon={FileClock}
+                    value={organizerMetrics ? organizerMetrics.drafts : '—'}
+                    helpText="In progress"
+                  />
+                  <StatCard
+                    label="Total Registrations"
+                    icon={Users}
+                    value={organizerMetrics ? organizerMetrics.registrations : '—'}
+                    helpText="Hacker applications"
+                  />
                 </div>
 
                 {/* My Hackathons Card */}
@@ -376,15 +429,25 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          <Button
-                            as={Link}
-                            to={`/hackathons/${hackathon._id}`}
-                            variant="secondary"
-                            size="sm"
-                            className="mt-5 self-start"
-                          >
-                            View details
-                          </Button>
+                          <div className="mt-5 flex flex-wrap items-center gap-2">
+                            <Button
+                              as={Link}
+                              to={`/organizer/hackathons/${hackathon._id}/manage`}
+                              size="sm"
+                            >
+                              <Settings className="h-3.5 w-3.5" />
+                              Manage
+                            </Button>
+                            <Button
+                              as={Link}
+                              to={`/organizer/hackathons/${hackathon._id}/registrations`}
+                              variant="secondary"
+                              size="sm"
+                            >
+                              <Users className="h-3.5 w-3.5" />
+                              Registrations
+                            </Button>
+                          </div>
                         </Card>
                       ))}
                     </div>
@@ -437,6 +500,30 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {/* Join Team via Invite Code Card */}
+                <Card className="p-6 sm:p-8 space-y-4 border-brand-100 bg-brand-50/40">
+                  <div className="flex items-center gap-3">
+                    <UserPlus className="h-5 w-5 text-brand-600" />
+                    <h2 className="text-lg font-semibold text-text-primary">Have a Team Invite Code?</h2>
+                  </div>
+                  <p className="text-sm text-text-secondary">
+                    If your captain created a team and shared an invite code, enter it below to join the roster.
+                  </p>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <input
+                      type="text"
+                      placeholder="e.g. HS-9X2K7L"
+                      value={joinCodeInput}
+                      onChange={(e) => setJoinCodeInput(e.target.value)}
+                      disabled={teamBusy}
+                      className="flex-1 rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300"
+                    />
+                    <Button type="button" size="md" onClick={handleJoinTeam} disabled={teamBusy}>
+                      Join Team
+                    </Button>
+                  </div>
+                </Card>
+
                 {/* My Registrations */}
                 <Card
                   id="registrations"
@@ -455,100 +542,110 @@ export default function DashboardPage() {
                     />
                   ) : (
                     <div className="grid gap-4 sm:grid-cols-2">
-                      {registrations.map((registration) => (
-                        <Card
-                          key={registration._id}
-                          className="flex flex-col justify-between p-5 transition hover:shadow-card"
-                        >
-                          <div>
-                            <div className="flex items-start justify-between gap-3">
-                              <h3 className="text-lg font-semibold leading-snug text-text-primary">{registration.hackathon?.title}</h3>
-                              <Badge>{capitalize(registration.status)}</Badge>
-                            </div>
+                      {registrations.map((registration) => {
+                        const isTeamHackathon = registration.hackathon?.teamType === 'team';
+                        const teamId = registration.team?._id || registration.team;
+                        const hackId = registration.hackathon?._id || registration.hackathon;
 
-                            <div className="mt-4 space-y-2 text-sm text-text-secondary">
-                              <div className="flex items-start gap-2">
-                                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
-                                <p>
-                                  {formatDateRange(registration.hackathon?.hackathonStart, registration.hackathon?.hackathonEnd)}
-                                </p>
+                        return (
+                          <Card
+                            key={registration._id}
+                            className="flex flex-col justify-between p-5 transition hover:shadow-card space-y-4"
+                          >
+                            <div>
+                              <div className="flex items-start justify-between gap-3">
+                                <h3 className="text-lg font-semibold leading-snug text-text-primary">
+                                  {registration.hackathon?.title}
+                                </h3>
+                                <Badge>{capitalize(registration.status)}</Badge>
                               </div>
 
-                              {registration.teamName ? (
+                              <div className="mt-4 space-y-2 text-sm text-text-secondary">
                                 <div className="flex items-start gap-2">
-                                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
-                                  <p>{registration.teamName}</p>
+                                  <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                                  <p>
+                                    {formatDateRange(
+                                      registration.hackathon?.hackathonStart,
+                                      registration.hackathon?.hackathonEnd
+                                    )}
+                                  </p>
                                 </div>
+
+                                {teamId ? (
+                                  <div className="flex items-start gap-2 text-brand-700 font-medium">
+                                    <Users className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <p>Team Roster Assigned</p>
+                                  </div>
+                                ) : isTeamHackathon ? (
+                                  <div className="flex items-start gap-2 text-amber-700">
+                                    <Users className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <p>Team required for this event</p>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-border flex flex-wrap gap-2 items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Button as={Link} to={`/hackathons/${hackId}/workspace`} size="sm">
+                                  <LayoutDashboard className="h-3.5 w-3.5" />
+                                  Workspace
+                                </Button>
+                                {teamId ? (
+                                  <Button as={Link} to={`/teams/${teamId}`} variant="secondary" size="sm">
+                                    <Users className="h-3.5 w-3.5" />
+                                    Team
+                                  </Button>
+                                ) : null}
+                              </div>
+
+                              {!teamId && isTeamHackathon ? (
+                                activeHackathonForTeam === hackId ? (
+                                  <div className="w-full space-y-2 pt-2">
+                                    <input
+                                      type="text"
+                                      placeholder="Enter new team name"
+                                      value={createTeamNameInput}
+                                      onChange={(e) => setCreateTeamNameInput(e.target.value)}
+                                      className="w-full rounded-xl border border-border px-3 py-2 text-xs"
+                                    />
+                                    <div className="flex gap-2">
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() => handleCreateTeam(hackId)}
+                                        disabled={teamBusy}
+                                      >
+                                        Create
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => setActiveHackathonForTeam(null)}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => setActiveHackathonForTeam(hackId)}
+                                  >
+                                    <Users className="h-3.5 w-3.5" />
+                                    Create Team
+                                  </Button>
+                                )
                               ) : null}
                             </div>
-                          </div>
-
-                          <Link
-                            to={`/hackathons/${registration.hackathon?._id}`}
-                            className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 transition hover:text-brand-800"
-                          >
-                            View registration details
-                            <ArrowRight className="h-3.5 w-3.5" />
-                          </Link>
-                        </Card>
-                      ))}
+                          </Card>
+                        );
+                      })}
                     </div>
                   )}
-                </Card>
-
-                {/* Discover More */}
-                <Card className="p-6 sm:p-8 space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="text-xl font-semibold tracking-tight text-text-primary">Discover more</h2>
-                    <ShieldCheck className="h-5 w-5 text-brand-600" />
-                  </div>
-
-                  {discoverLoading ? (
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <div className="h-36 rounded-2xl bg-surfaceMuted animate-pulse" />
-                      <div className="h-36 rounded-2xl bg-surfaceMuted animate-pulse" />
-                      <div className="h-36 rounded-2xl bg-surfaceMuted animate-pulse" />
-                    </div>
-                  ) : discoverError ? (
-                    <p className="text-sm leading-7 text-text-secondary">{discoverError}</p>
-                  ) : discoverHackathons.length === 0 ? (
-                    <p className="text-sm leading-7 text-text-secondary">No published hackathons to show right now.</p>
-                  ) : (
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      {discoverHackathons.map((item) => (
-                        <Link
-                          key={item._id}
-                          to={`/hackathons/${item._id}`}
-                          className="group flex h-full flex-col justify-between rounded-2xl border border-border bg-white p-5 transition hover:-translate-y-1 hover:shadow-card"
-                        >
-                          <div>
-                            <Sparkles className="h-5 w-5 text-brand-600" />
-                            <h3 className="mt-3 text-sm font-semibold leading-snug text-text-primary">{item.title}</h3>
-                            <p className="mt-2 text-xs text-text-secondary">
-                              {formatDateRange(item.hackathonStart, item.hackathonEnd)}
-                            </p>
-                            {item.mode ? (
-                              <p className="mt-2 flex items-center gap-1.5 text-xs text-text-secondary">
-                                {item.mode === 'online' ? <Wifi className="h-3.5 w-3.5 text-brand-600" /> : <MapPin className="h-3.5 w-3.5 text-brand-600" />}
-                                {capitalize(item.mode)}
-                              </p>
-                            ) : null}
-                          </div>
-                          <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 transition group-hover:text-brand-800">
-                            View details
-                            <ArrowRight className="h-3.5 w-3.5" />
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-
-                  <div>
-                    <Button as={Link} to="/hackathons" variant="secondary">
-                      <Compass className="h-4 w-4" />
-                      View all hackathons
-                    </Button>
-                  </div>
                 </Card>
               </div>
             </PageContainer>

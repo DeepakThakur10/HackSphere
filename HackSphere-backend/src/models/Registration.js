@@ -20,7 +20,7 @@ const registrationSchema = new Schema(
             trim: true,
         },
 
-        teamId: {
+        team: {
             type: Schema.Types.ObjectId,
             ref: "Team",
             default: null,
@@ -28,8 +28,8 @@ const registrationSchema = new Schema(
 
         status: {
             type: String,
-            enum: ["registered", "cancelled"],
-            default: "registered",
+            enum: ["pending", "approved", "rejected", "cancelled"],
+            default: "pending",
         },
     },
     {

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
+import { UserPlus, UserCheck } from 'lucide-react';
 import PageContainer from '../../components/common/PageContainer';
+import PageHero from '../../components/common/PageHero';
+import FormSection from '../../components/common/FormSection';
+import Button from '../../components/ui/Button';
 import { useAuth } from '../../context/authContext';
 
 export default function SignupPage() {
@@ -21,7 +22,6 @@ export default function SignupPage() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-
     setFormData((current) => ({
       ...current,
       [name]: value,
@@ -31,10 +31,23 @@ export default function SignupPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (loading) return;
+
+    if (
+      !formData.firstName.trim() ||
+      !formData.lastName.trim() ||
+      !formData.username.trim() ||
+      !formData.email.trim() ||
+      !formData.password.trim()
+    ) {
+      toast.error('All fields are required');
+      return;
+    }
+
     try {
       setLoading(true);
       await signup(formData);
-      toast.success('Account created. Sign in to continue.');
+      toast.success('Account created! Sign in to continue.');
       navigate('/login');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Unable to create account');
@@ -44,67 +57,132 @@ export default function SignupPage() {
   };
 
   return (
-    <section className="py-16 sm:py-20">
-      <PageContainer className="max-w-2xl">
-        <Card className="mx-auto max-w-lg">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand-600">Create account</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-text-primary">Join HackSphere</h1>
-          <p className="mt-3 text-sm leading-6 text-text-secondary">
-            Create your account in the backend and use the same session for the frontend experience.
-          </p>
-          <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <input
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-300"
-                placeholder="First name"
-                name="firstName"
-                autoComplete="given-name"
-                value={formData.firstName}
-                onChange={handleChange}
-              />
-              <input
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-300"
-                placeholder="Last name"
-                name="lastName"
-                autoComplete="family-name"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
+    <section className="pb-16 text-text-primary">
+      {/* Page Hero */}
+      <PageHero
+        badge="Account Onboarding"
+        title="Join the HackSphere Community"
+        description="Create your account to register for hackathons, build innovative projects with teams, and host your own events."
+      />
+
+      {/* Main Form Container */}
+      <PageContainer className="pt-10">
+        <div className="mx-auto max-w-xl">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <FormSection
+              icon={UserPlus}
+              title="Registration Details"
+              description="Enter your personal details to set up your profile"
+            >
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2">
+                      First Name *
+                    </label>
+                    <input
+                      className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      placeholder="First name"
+                      name="firstName"
+                      autoComplete="given-name"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      placeholder="Last name"
+                      name="lastName"
+                      autoComplete="family-name"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2">
+                    Username *
+                  </label>
+                  <input
+                    className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                    placeholder="Choose a username"
+                    name="username"
+                    autoComplete="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                    placeholder="name@example.com"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2">
+                    Password *
+                  </label>
+                  <input
+                    className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                    placeholder="Create a strong password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+
+                <div className="pt-4">
+                  {/* Primary Action Button */}
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={loading}
+                    className="w-full justify-center"
+                  >
+                    <UserCheck className="h-4 w-4" />
+                    {loading ? 'Creating account...' : 'Create account'}
+                  </Button>
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Redirect Helper */}
+            <div className="text-center text-sm text-text-secondary">
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-brand-700 hover:text-brand-800">
+                Sign in
+              </Link>
             </div>
-            <input
-              className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-300"
-              placeholder="Username"
-              name="username"
-              autoComplete="username"
-              value={formData.username}
-              onChange={handleChange}
-            />
-            <input
-              className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-300"
-              placeholder="Email address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            <input
-              className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-300"
-              placeholder="Password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? 'Creating account...' : 'Create account'}
-            </Button>
           </form>
-          <p className="mt-6 text-sm text-text-secondary">
-            Already have an account? <Link to="/login" className="font-medium text-brand-700">Sign in</Link>
-          </p>
-        </Card>
+        </div>
       </PageContainer>
     </section>
   );

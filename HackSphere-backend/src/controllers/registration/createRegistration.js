@@ -4,8 +4,7 @@ import Hackathon from "../../models/Hackathon.js";
 
 export const createRegistration = async (req, res) => {
     try {
-
-        const { hackathonId, teamName } = req.body;
+        const { hackathonId } = req.body;
 
         if (!hackathonId) {
             return res.status(400).json({
@@ -46,13 +45,6 @@ export const createRegistration = async (req, res) => {
             });
         }
 
-        if (hackathon.teamType === "team" && (!teamName || !teamName.trim())) {
-            return res.status(400).json({
-                success: false,
-                message: "Team name is required for team hackathons",
-            });
-        }
-
         const existingRegistration = await Registration.findOne({
             hackathon: hackathonId,
             user: req.user.id,
@@ -68,21 +60,21 @@ export const createRegistration = async (req, res) => {
         const registration = await Registration.create({
             hackathon: hackathonId,
             user: req.user.id,
-            teamName: hackathon.teamType === "team" ? teamName.trim() : "",
+            team: null,
+            status: "approved",
         });
 
         const populatedRegistration = await Registration.findById(registration._id)
-            .populate("hackathon", "title mode registrationStart registrationEnd hackathonStart hackathonEnd status")
+            .populate("hackathon", "title mode registrationStart registrationEnd hackathonStart hackathonEnd status teamType minTeamSize maxTeamSize")
             .populate("user", "firstName lastName email");
 
         return res.status(201).json({
             success: true,
-            message: "Registered successfully",
+            message: "Registered for hackathon successfully. You can now create or join a team.",
             data: populatedRegistration,
         });
 
     } catch (error) {
-
         if (error.code === 11000) {
             return res.status(400).json({
                 success: false,

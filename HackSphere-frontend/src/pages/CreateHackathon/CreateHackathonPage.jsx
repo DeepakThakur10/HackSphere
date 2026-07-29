@@ -17,6 +17,7 @@ import PageContainer from '../../components/common/PageContainer';
 import PageHero from '../../components/common/PageHero';
 import FormSection from '../../components/common/FormSection';
 import Button from '../../components/ui/Button';
+import { createHackathonRequest, uploadImageRequest } from '../../services/api';
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const maxImageSizeBytes = 5 * 1024 * 1024; // 5MB
@@ -29,6 +30,12 @@ function validateImageFile(file) {
     return 'Image must be 5 MB or smaller.';
   }
   return '';
+}
+
+function safeToISOString(dateStr) {
+  if (!dateStr) return null;
+  const dateObj = new Date(dateStr);
+  return isNaN(dateObj.getTime()) ? null : dateObj.toISOString();
 }
 
 export default function CreateHackathonPage() {
@@ -162,17 +169,24 @@ export default function CreateHackathonPage() {
     if (!formData.title.trim()) return 'Title is required';
     if (!formData.description.trim()) return 'Description is required';
     if (!formData.mode) return 'Mode is required';
-    if (!formData.registrationStart) return 'Registration start date is required';
-    if (!formData.registrationEnd) return 'Registration end date is required';
-    if (!formData.hackathonStart) return 'Hackathon start date is required';
-    if (!formData.hackathonEnd) return 'Hackathon end date is required';
+
+    const regStartISO = safeToISOString(formData.registrationStart);
+    const regEndISO = safeToISOString(formData.registrationEnd);
+    const hackStartISO = safeToISOString(formData.hackathonStart);
+    const hackEndISO = safeToISOString(formData.hackathonEnd);
+
+    if (!regStartISO) return 'Registration start date is required and must be valid';
+    if (!regEndISO) return 'Registration end date is required and must be valid';
+    if (!hackStartISO) return 'Hackathon start date is required and must be valid';
+    if (!hackEndISO) return 'Hackathon end date is required and must be valid';
+
     if (!formData.teamType) return 'Team type is required';
     if (!formData.maxTeams || Number(formData.maxTeams) < 1) return 'Max teams must be at least 1';
 
-    const regStart = new Date(formData.registrationStart);
-    const regEnd = new Date(formData.registrationEnd);
-    const hackStart = new Date(formData.hackathonStart);
-    const hackEnd = new Date(formData.hackathonEnd);
+    const regStart = new Date(regStartISO);
+    const regEnd = new Date(regEndISO);
+    const hackStart = new Date(hackStartISO);
+    const hackEnd = new Date(hackEndISO);
 
     if (regEnd <= regStart) {
       return 'Registration end date must be after registration start date';
@@ -241,10 +255,10 @@ export default function CreateHackathonPage() {
         location: formData.location.trim(),
         isPaid: Boolean(formData.isPaid),
         entryFee: Number(formData.entryFee),
-        registrationStart: new Date(formData.registrationStart).toISOString(),
-        registrationEnd: new Date(formData.registrationEnd).toISOString(),
-        hackathonStart: new Date(formData.hackathonStart).toISOString(),
-        hackathonEnd: new Date(formData.hackathonEnd).toISOString(),
+        registrationStart: safeToISOString(formData.registrationStart),
+        registrationEnd: safeToISOString(formData.registrationEnd),
+        hackathonStart: safeToISOString(formData.hackathonStart),
+        hackathonEnd: safeToISOString(formData.hackathonEnd),
         teamType: formData.teamType,
         minTeamSize: Number(formData.minTeamSize),
         maxTeamSize: Number(formData.maxTeamSize),
@@ -256,14 +270,14 @@ export default function CreateHackathonPage() {
       const response = await createHackathonRequest(payload);
       toast.success('Hackathon created successfully!');
 
-      const createdId = response.data?.hackathon?._id;
+      const createdId = response.data?.hackathon?._id || response.data?.data?._id;
       if (createdId) {
         navigate(`/hackathons/${createdId}`);
       } else {
         navigate('/dashboard');
       }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to create hackathon';
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to create hackathon';
       toast.error(msg);
     } finally {
       setUploading(false);

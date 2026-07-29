@@ -243,6 +243,15 @@ export default function HackathonDetailsPage() {
                       {isOpen ? 'Register now' : 'Registration closed'}
                     </Button>
                     <Button
+                      as={Link}
+                      to={`/hackathons/${hackathon._id}/leaderboard`}
+                      variant="secondary"
+                      size="lg"
+                    >
+                      <Trophy className="h-4 w-4" />
+                      Leaderboard
+                    </Button>
+                    <Button
                       type="button"
                       variant="secondary"
                       size="lg"

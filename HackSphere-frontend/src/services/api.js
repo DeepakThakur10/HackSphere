@@ -32,12 +32,78 @@ export const getHackathonByIdRequest = (id) => api.get(`/hackathons/${id}`);
 export const getOrganizerHackathonsRequest = (params = {}) =>
   api.get('/hackathons/mine', { params });
 
+export const getOrganizerMetricsRequest = () =>
+  api.get('/hackathons/organizer/metrics');
+
 export const createHackathonRequest = (payload) => api.post('/hackathons', payload);
 
-export const registerForHackathonRequest = ({ hackathonId, teamName }) => api.post('/registrations', { hackathonId, teamName });
+export const updateHackathonRequest = (id, payload) => api.put(`/hackathons/${id}`, payload);
+
+export const updateHackathonStatusRequest = (id, status) => api.patch(`/hackathons/${id}/status`, { status });
+
+export const deleteHackathonRequest = (id) => api.delete(`/hackathons/${id}`);
+
+export const registerForHackathonRequest = ({ hackathonId }) => api.post('/registrations', { hackathonId });
 
 export const getRegistrationsRequest = () => api.get('/registrations');
 
-export const uploadImageRequest = (formData) => api.post('/upload/image', formData);
+// Organizer Phase 2A API Endpoints
+export const getOrganizerRegistrationsRequest = (hackathonId) =>
+  api.get(`/registrations/organizer/${hackathonId}`);
+
+export const approveRegistrationRequest = (id) =>
+  api.patch(`/registrations/${id}/approve`);
+
+export const rejectRegistrationRequest = (id) =>
+  api.patch(`/registrations/${id}/reject`);
+
+// Team API endpoints
+export const createTeamRequest = (payload) => api.post('/teams', payload);
+
+export const joinTeamRequest = (payload) => api.post('/teams/join', payload);
+
+export const getTeamByIdRequest = (id) => api.get(`/teams/${id}`);
+
+export const leaveTeamRequest = (id) => api.post(`/teams/${id}/leave`);
+
+export const transferLeaderRequest = ({ id, newLeaderId }) => api.patch(`/teams/${id}/transfer-leader`, { newLeaderId });
+
+export const lockTeamRequest = (id) => api.patch(`/teams/${id}/lock`);
+
+export const deleteTeamRequest = (id) => api.delete(`/teams/${id}`);
+
+// Phase 3B Submission API Endpoints
+export const createOrUpdateSubmissionRequest = (payload) => api.post('/submissions', payload);
+
+export const getParticipantSubmissionRequest = (hackathonId) => api.get(`/submissions/mine/${hackathonId}`);
+
+export const getSubmissionByIdRequest = (id) => api.get(`/submissions/${id}`);
+
+// Phase 4 Judge & Review API Endpoints
+export const getAvailableJudgesRequest = () => api.get('/judges');
+
+export const getAssignedJudgesRequest = (hackathonId) => api.get(`/judges/hackathon/${hackathonId}`);
+
+export const assignJudgeRequest = (hackathonId, judgeId) => api.post(`/judges/hackathon/${hackathonId}`, { judgeId });
+
+export const removeJudgeRequest = (hackathonId, judgeId) => api.delete(`/judges/hackathon/${hackathonId}/${judgeId}`);
+
+export const createOrUpdateReviewRequest = (payload) => api.post('/reviews', payload);
+
+export const getAssignedSubmissionsForJudgeRequest = () => api.get('/reviews/assigned');
+
+export const getReviewBySubmissionRequest = (submissionId) => api.get(`/reviews/submission/${submissionId}`);
+
+// Phase 5 Leaderboard API Endpoints
+export const getLeaderboardRequest = (hackathonId) => api.get(`/hackathons/${hackathonId}/leaderboard`);
+
+export const getWinnersRequest = (hackathonId) => api.get(`/hackathons/${hackathonId}/winners`);
+
+export const uploadImageRequest = (formData) =>
+  api.post('/upload/image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 
 export default api;
