@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import PageContainer from '../common/PageContainer';
+import Lightfall from '../visuals/Lightfall';
 
 const highlights = [
   { icon: Zap, label: 'Launch faster', value: 'Set up events in minutes' },
@@ -54,10 +55,29 @@ export default function Hero() {
           </div>
 
           <div className="relative">
-            {/* ReactBits animation goes here */}
             <div className="absolute inset-0 -z-10 rounded-[2rem] bg-[radial-gradient(circle_at_top,rgba(44,143,255,0.18),transparent_55%)] blur-3xl" />
             <Card className="relative overflow-hidden p-0">
-              <div className="border-b border-border bg-gradient-to-br from-white to-brand-50 px-6 py-5 sm:px-8">
+              <div className="pointer-events-none absolute inset-0">
+                <Lightfall
+                  colors={['#A6C8FF', '#5227FF', '#FF9FFC']}
+                  backgroundColor="#0A29FF"
+                  speed={1}
+                  streakCount={8}
+                  streakWidth={1}
+                  streakLength={1}
+                  glow={1}
+                  density={1}
+                  twinkle={1}
+                  zoom={2}
+                  backgroundGlow={1}
+                  opacity={1}
+                  mouseInteraction
+                  mouseStrength={1}
+                  mouseRadius={0.6}
+                />
+              </div>
+
+              <div className="relative z-10 border-b border-border bg-gradient-to-br from-white/95 to-brand-50/95 px-6 py-5 sm:px-8">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-text-secondary">Live dashboard preview</p>
@@ -69,7 +89,7 @@ export default function Hero() {
                 </div>
               </div>
 
-              <div className="space-y-4 p-6 sm:p-8">
+              <div className="relative z-10 space-y-4 p-6 sm:p-8">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl bg-surfaceMuted p-4">
                     <p className="text-sm text-text-muted">Registered participants</p>

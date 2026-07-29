@@ -1,12 +1,113 @@
+import { useEffect, useState } from 'react';
 import { CalendarDays, MapPin, Trophy } from 'lucide-react';
 import PageContainer from '../common/PageContainer';
 import SectionHeading from '../common/SectionHeading';
 import Card from '../ui/Card';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
-import { featuredHackathons } from '../../constants/mockData';
+import { getHackathonsRequest } from '../../services/api';
+
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+});
+
+const formatMode = (mode) => {
+  if (!mode) {
+    return 'Hybrid';
+  }
+
+  return mode.charAt(0).toUpperCase() + mode.slice(1);
+};
+
+const formatStatus = (status) => {
+  if (status === 'registration_closed') {
+    return 'Registration closed';
+  }
+
+  if (status === 'ongoing') {
+    return 'Ongoing';
+  }
+
+  if (status === 'completed') {
+    return 'Completed';
+  }
+
+  return 'Open';
+};
+
+const formatPrize = (prizePool) => {
+  if (!prizePool) {
+    return 'Free';
+  }
+
+  return currencyFormatter.format(prizePool);
+};
+
+const formatDateRange = (start, end) => {
+  if (!start || !end) {
+    return 'Dates coming soon';
+  }
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  return `${dateFormatter.format(startDate)} - ${dateFormatter.format(endDate)}`;
+};
+
+const mapHackathon = (hackathon) => ({
+  id: hackathon._id,
+  name: hackathon.title,
+  organizer: [hackathon.createdBy?.firstName, hackathon.createdBy?.lastName].filter(Boolean).join(' ') || hackathon.createdBy?.email || 'HackSphere Organizer',
+  date: formatDateRange(hackathon.hackathonStart, hackathon.hackathonEnd),
+  mode: formatMode(hackathon.mode),
+  prize: formatPrize(hackathon.prizePool),
+  status: formatStatus(hackathon.status),
+  category: hackathon.techStack?.length ? hackathon.techStack.join(' / ') : 'Hackathon',
+  location: hackathon.location || 'Location TBA',
+});
 
 export default function FeaturedHackathons() {
+  const [hackathons, setHackathons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHackathons = async () => {
+      try {
+        setLoading(true);
+        const response = await getHackathonsRequest({ limit: 3 });
+
+        if (isMounted) {
+          setHackathons((response.data.data || []).map(mapHackathon));
+          setError('');
+        }
+      } catch (requestError) {
+        if (isMounted) {
+          setError(requestError.response?.data?.message || 'Unable to load hackathons');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadHackathons();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <section className="py-12 sm:py-16">
       <PageContainer>
@@ -14,13 +115,31 @@ export default function FeaturedHackathons() {
           <SectionHeading
             eyebrow="Featured"
             title="Hackathons worth joining"
-            description="A curated set of events that show how HackSphere can surface deadlines, prizes, and format at a glance."
+            description="Live hackathons pulled from the backend, showing the basics teams care about first."
           />
           <Button variant="secondary">View all hackathons</Button>
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-3">
-          {featuredHackathons.map((hackathon) => (
+        <div className="mt-10">
+          {loading ? (
+            <div className="grid gap-6 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="h-64 animate-pulse bg-white/70" />
+              ))}
+            </div>
+          ) : error ? (
+            <Card className="border-dashed text-center text-text-secondary">
+              <p className="text-sm font-medium text-text-primary">Could not load hackathons</p>
+              <p className="mt-2 text-sm">{error}</p>
+            </Card>
+          ) : hackathons.length === 0 ? (
+            <Card className="border-dashed text-center text-text-secondary">
+              <p className="text-sm font-medium text-text-primary">No published hackathons yet</p>
+              <p className="mt-2 text-sm">Once your backend has published events, they will appear here automatically.</p>
+            </Card>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-3">
+              {hackathons.map((hackathon) => (
             <Card key={hackathon.id} className="group flex h-full flex-col justify-between transition hover:-translate-y-1 hover:shadow-card">
               <div>
                 <div className="flex items-start justify-between gap-4">
@@ -43,7 +162,7 @@ export default function FeaturedHackathons() {
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-brand-600" />
-                    <span>{hackathon.mode}</span>
+                    <span>{hackathon.mode} · {hackathon.location}</span>
                   </div>
                 </div>
               </div>
@@ -58,7 +177,9 @@ export default function FeaturedHackathons() {
                 </button>
               </div>
             </Card>
-          ))}
+              ))}
+            </div>
+          )}
         </div>
       </PageContainer>
     </section>

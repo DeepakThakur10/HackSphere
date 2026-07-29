@@ -57,6 +57,28 @@ const userSchema = new Schema(
             default: "",
         },
 
+        github: {
+            type: String,
+            default: "",
+        },
+
+        linkedin: {
+            type: String,
+            default: "",
+        },
+
+        portfolio: {
+            type: String,
+            default: "",
+        },
+
+        skills: [
+            {
+                type: String,
+                trim: true,
+            },
+        ],
+
         resume: {
             type: String,
             default: "",
