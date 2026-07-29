@@ -126,9 +126,13 @@ export const assignJudgeToHackathon = async (req, res) => {
           inviteLink,
         });
 
+        const updatedAssignments = await HackathonJudge.find({ hackathon: id, status: { $ne: "removed" } })
+          .populate("judge", "firstName lastName email username role profilePicture");
+
         return res.status(200).json({
           success: true,
           message: `Invitation email sent to ${targetEmail}! When they click the link to register, they will be registered as a Judge and assigned automatically.`,
+          data: updatedAssignments,
         });
       }
     } else if (judgeId) {

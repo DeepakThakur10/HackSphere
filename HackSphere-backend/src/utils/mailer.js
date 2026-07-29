@@ -2,13 +2,14 @@ import nodemailer from "nodemailer";
 
 const createTransporter = async () => {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const user = process.env.SMTP_USER.trim();
+    const pass = process.env.SMTP_PASS.trim();
+
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === "true",
+      service: "gmail",
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user,
+        pass,
       },
     });
   }
@@ -61,6 +62,10 @@ export const sendJudgeInvitationEmail = async ({ toEmail, hackathonTitle, invite
     });
 
     console.log(`[Mail Sent] Judge Invitation sent to ${toEmail}. Message ID: ${info.messageId}`);
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    if (previewUrl) {
+      console.log(`[Ethereal Preview URL] ${previewUrl}`);
+    }
   } catch (err) {
     console.error(`[Mail Error] Failed to send email to ${toEmail}:`, err.message);
   }
@@ -95,6 +100,10 @@ export const sendJudgeAssignmentNotificationEmail = async ({ toEmail, hackathonT
     });
 
     console.log(`[Mail Sent] Judge Assignment Notification sent to ${toEmail}. Message ID: ${info.messageId}`);
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    if (previewUrl) {
+      console.log(`[Ethereal Preview URL] ${previewUrl}`);
+    }
   } catch (err) {
     console.error(`[Mail Error] Failed to send notification email to ${toEmail}:`, err.message);
   }
@@ -110,7 +119,7 @@ export const sendTeamInviteEmail = async ({ toEmail, teamName, inviteCode, hacka
       return;
     }
 
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"HackSphere Platform" <${process.env.SMTP_USER || "noreply@hacksphere.com"}>`,
       to: toEmail,
       subject: `Team Invitation for ${hackathonTitle} — Join "${teamName}"`,
@@ -133,7 +142,11 @@ export const sendTeamInviteEmail = async ({ toEmail, teamName, inviteCode, hacka
       `,
     });
 
-    console.log(`[Mail Sent] Team Invitation sent to ${toEmail}`);
+    console.log(`[Mail Sent] Team Invitation sent to ${toEmail}. Message ID: ${info.messageId}`);
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    if (previewUrl) {
+      console.log(`[Ethereal Preview URL] ${previewUrl}`);
+    }
   } catch (err) {
     console.error(`[Mail Error] Failed to send team invite email to ${toEmail}:`, err.message);
   }

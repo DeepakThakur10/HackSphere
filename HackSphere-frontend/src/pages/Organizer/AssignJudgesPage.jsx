@@ -57,9 +57,9 @@ export default function AssignJudgesPage() {
         ]);
 
         if (active) {
-          setHackathon(hackRes.data.data);
-          setAssignedJudges(assignedRes.data.data);
-          setAvailableJudges(availableRes.data.data);
+          setHackathon(hackRes.data?.data || null);
+          setAssignedJudges(Array.isArray(assignedRes.data?.data) ? assignedRes.data.data : []);
+          setAvailableJudges(Array.isArray(availableRes.data?.data) ? availableRes.data.data : []);
           setError('');
         }
       } catch (err) {
@@ -89,7 +89,9 @@ export default function AssignJudgesPage() {
     try {
       setBusy(true);
       const res = await assignJudgeRequest(hackathonId, { judgeId: selectedJudgeId });
-      setAssignedJudges(res.data.data);
+      if (Array.isArray(res.data?.data)) {
+        setAssignedJudges(res.data.data);
+      }
       setSelectedJudgeId('');
       toast.success('Judge assigned successfully');
     } catch (err) {
@@ -108,9 +110,11 @@ export default function AssignJudgesPage() {
     try {
       setBusy(true);
       const res = await assignJudgeRequest(hackathonId, { email: emailInput.trim() });
-      setAssignedJudges(res.data.data);
+      if (Array.isArray(res.data?.data)) {
+        setAssignedJudges(res.data.data);
+      }
       setEmailInput('');
-      toast.success(res.data.message || 'Judge assigned successfully');
+      toast.success(res.data?.message || 'Judge assigned successfully');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to assign judge by email');
     } finally {
@@ -124,7 +128,7 @@ export default function AssignJudgesPage() {
     try {
       setBusy(true);
       await removeJudgeRequest(hackathonId, judgeId);
-      setAssignedJudges((prev) => prev.filter((a) => (a.judge?._id || a.judge) !== judgeId));
+      setAssignedJudges((prev) => (Array.isArray(prev) ? prev : []).filter((a) => (a.judge?._id || a.judge) !== judgeId));
       toast.success('Judge removed');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to remove judge');
@@ -133,9 +137,12 @@ export default function AssignJudgesPage() {
     }
   };
 
-  // Filter out already assigned judges
-  const unassignedJudges = availableJudges.filter(
-    (j) => !assignedJudges.some((a) => (a.judge?._id || a.judge) === j._id)
+  // Filter out already assigned judges safely
+  const assignedList = Array.isArray(assignedJudges) ? assignedJudges : [];
+  const availableList = Array.isArray(availableJudges) ? availableJudges : [];
+
+  const unassignedJudges = availableList.filter(
+    (j) => !assignedList.some((a) => (a.judge?._id || a.judge) === j._id)
   );
 
   return (
