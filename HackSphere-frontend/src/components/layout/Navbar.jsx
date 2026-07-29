@@ -1,4 +1,4 @@
-import { Menu, X, ChevronDown, LayoutDashboard, LogOut } from 'lucide-react';
+import { Menu, X, ChevronDown, LayoutDashboard, User, LogOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
@@ -116,6 +116,14 @@ export default function Navbar() {
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Link>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surfaceMuted hover:text-text-primary"
+                  >
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Link>
                   <button
                     type="button"
                     onClick={handleLogout}
@@ -161,6 +169,11 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <NavLink to="/dashboard" onClick={() => setOpen(false)} className={mobileNavLinkClass}>
                   Dashboard
+                </NavLink>
+              ) : null}
+              {isAuthenticated ? (
+                <NavLink to="/profile" onClick={() => setOpen(false)} className={mobileNavLinkClass}>
+                  Profile
                 </NavLink>
               ) : null}
             </nav>

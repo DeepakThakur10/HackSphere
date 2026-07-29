@@ -6,6 +6,7 @@ import { getHackathons } from "../controllers/hackathon/getHackathons.js";
 import { getHackathonById } from "../controllers/hackathon/getHackathonById.js";
 import { updateHackathon } from "../controllers/hackathon/updateHackathon.js";
 import { deleteHackathon } from "../controllers/hackathon/deleteHackathon.js";
+import { getOrganizerHackathons } from "../controllers/hackathon/getOrganizerHackathons.js";
 
 
 const router = Router();
@@ -17,6 +18,13 @@ router.post(
     createHackathon
 );
 router.get("/", getHackathons);
+
+router.get(
+    "/mine",
+    authMiddleware,
+    authorizeRoles("organizer", "admin"),
+    getOrganizerHackathons
+);
 
 router.get("/:id", getHackathonById);
 

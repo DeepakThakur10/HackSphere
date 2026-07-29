@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import RootLayout from '../layouts/RootLayout';
 import ProtectedRoute from './ProtectedRoute';
 import GuestRoute from './GuestRoute';
@@ -8,6 +8,7 @@ import SignupPage from '../pages/Signup/SignupPage';
 import HackathonsPage from '../pages/Hackathons/HackathonsPage';
 import HackathonDetailsPage from '../pages/HackathonDetails/HackathonDetailsPage';
 import DashboardPage from '../pages/Dashboard/DashboardPage';
+import ProfilePage from '../pages/Profile/ProfilePage';
 import NotFoundPage from '../pages/NotFound/NotFoundPage';
 
 export default function AppRoutes() {
@@ -17,7 +18,6 @@ export default function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/hackathons" element={<HackathonsPage />} />
         <Route path="/hackathons/:id" element={<HackathonDetailsPage />} />
-        <Route path="/profile" element={<Navigate to="/" replace />} />
 
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<LoginPage />} />
@@ -26,6 +26,7 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
