@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Camera, Pencil, X } from 'lucide-react';
+import { Camera, Pencil, ShieldCheck, User, UserCheck, X } from 'lucide-react';
 import PageContainer from '../../components/common/PageContainer';
+import PageHero from '../../components/common/PageHero';
+import FormSection from '../../components/common/FormSection';
+import EmptyState from '../../components/common/EmptyState';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -20,7 +23,6 @@ function capitalize(value) {
   if (!value) {
     return '';
   }
-
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
@@ -28,7 +30,6 @@ function formatCreatedAt(value) {
   if (!value) {
     return 'Unknown';
   }
-
   return dateFormatter.format(new Date(value));
 }
 
@@ -36,15 +37,12 @@ function validateForm(formData) {
   if (!formData.firstName.trim() || formData.firstName.trim().length < 2) {
     return 'First name must be at least 2 characters';
   }
-
   if (!formData.lastName.trim()) {
     return 'Last name is required';
   }
-
   if (!formData.username.trim() || formData.username.trim().length < 3) {
     return 'Username must be at least 3 characters';
   }
-
   return '';
 }
 
@@ -52,11 +50,9 @@ function validateImageFile(file) {
   if (!allowedImageTypes.includes(file.type)) {
     return 'Only JPG, PNG, and WEBP images are allowed';
   }
-
   if (file.size > maxImageSizeBytes) {
     return 'Image must be 5 MB or smaller';
   }
-
   return '';
 }
 
@@ -114,7 +110,6 @@ export default function ProfilePage() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-
     setFormData((current) => ({
       ...current,
       [name]: value,
@@ -133,11 +128,9 @@ export default function ProfilePage() {
   const handleCancel = () => {
     setIsEditing(false);
     setSelectedFile(null);
-
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
-
     setPreviewUrl('');
   };
 
@@ -149,13 +142,9 @@ export default function ProfilePage() {
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     const validationError = validateImageFile(file);
-
     if (validationError) {
       toast.error(validationError);
       event.target.value = '';
@@ -173,12 +162,9 @@ export default function ProfilePage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (saving || uploading) {
-      return;
-    }
+    if (saving || uploading) return;
 
     const validationError = validateForm(formData);
-
     if (validationError) {
       toast.error(validationError);
       return;
@@ -219,58 +205,138 @@ export default function ProfilePage() {
   const isBusy = saving || uploading;
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 py-10 text-slate-100 sm:py-14">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.14),transparent_24%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_26%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,1))]" />
-      <PageContainer className="relative">
+    <section className="pb-16 text-text-primary">
+      {/* Page Hero */}
+      <PageHero
+        badge="Account Settings"
+        title="Profile & Preferences"
+        description="View and manage your personal account details, avatar photo, and public identity on HackSphere."
+      />
+
+      {/* Main Content */}
+      <PageContainer className="pt-10">
         <div className="mx-auto max-w-3xl space-y-8">
           {loading ? (
-            <Card className="border-white/10 bg-white/5 p-8 text-slate-100 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-              <div className="space-y-5">
-                <div className="h-20 w-20 rounded-full bg-white/10" />
-                <div className="h-9 w-3/4 rounded-xl bg-white/10" />
-                <div className="grid gap-3 pt-3 sm:grid-cols-2">
-                  <div className="h-16 rounded-2xl bg-white/10" />
-                  <div className="h-16 rounded-2xl bg-white/10" />
-                </div>
-              </div>
-            </Card>
+            <Card className="h-64 animate-pulse bg-surfaceMuted" />
           ) : error ? (
-            <Card className="border-white/10 bg-white/5 p-8 text-center text-slate-100 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-              <p className="text-lg font-semibold text-white">Could not load your profile</p>
-              <p className="mt-3 text-sm leading-6 text-slate-300">{error}</p>
-              <div className="mt-6 flex justify-center">
-                <Button type="button" onClick={() => window.location.reload()} className="bg-cyan-500 text-slate-950 hover:bg-cyan-400">
-                  Try again
-                </Button>
-              </div>
-            </Card>
+            <EmptyState
+              icon={UserCheck}
+              title="Could not load your profile"
+              description={error}
+              actionText="Try again"
+              onActionClick={() => window.location.reload()}
+            />
+          ) : !isEditing ? (
+            /* DEFAULT VIEW MODE */
+            <div className="space-y-8">
+              {/* 1. Profile Summary */}
+              <Card className="p-6 sm:p-8">
+                <div className="flex flex-col items-center sm:flex-row sm:items-center gap-6 text-center sm:text-left">
+                  <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-brand-50 shadow-soft">
+                    {profile.profilePicture ? (
+                      <img src={profile.profilePicture} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-2xl font-semibold text-brand-700">
+                        {profile.firstName?.charAt(0)}
+                        {profile.lastName?.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 flex-1">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+                        {profile.firstName} {profile.lastName}
+                      </h1>
+                      <Badge>{capitalize(profile.role)}</Badge>
+                    </div>
+                    <p className="text-sm font-medium text-brand-700">@{profile.username}</p>
+                    <p className="text-xs text-text-secondary">Member since {formatCreatedAt(profile.createdAt)}</p>
+                  </div>
+
+                  <Button type="button" size="lg" onClick={handleEditClick}>
+                    <Pencil className="h-4 w-4" />
+                    Edit profile
+                  </Button>
+                </div>
+              </Card>
+
+              {/* 2. Personal Information Detail Card */}
+              <FormSection
+                icon={User}
+                title="Personal Information"
+                description="Your name and public handle details"
+              >
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">First name</p>
+                    <p className="mt-1 text-sm font-medium text-text-primary">{profile.firstName}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Last name</p>
+                    <p className="mt-1 text-sm font-medium text-text-primary">{profile.lastName}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Username</p>
+                    <p className="mt-1 text-sm font-medium text-text-primary">@{profile.username}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Account role</p>
+                    <p className="mt-1 text-sm font-medium text-text-primary">{capitalize(profile.role)}</p>
+                  </div>
+                </div>
+              </FormSection>
+
+              {/* 3. Account Information Detail Card */}
+              <FormSection
+                icon={ShieldCheck}
+                title="Account & Security"
+                description="Email credentials and membership status"
+              >
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Email address</p>
+                    <p className="mt-1 text-sm font-medium text-text-primary">{profile.email}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Joined date</p>
+                    <p className="mt-1 text-sm font-medium text-text-primary">{formatCreatedAt(profile.createdAt)}</p>
+                  </div>
+                </div>
+              </FormSection>
+            </div>
           ) : (
-            <Card className="border-white/10 bg-white/5 p-6 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-8">
-              {/* Profile Header */}
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
+            /* EDITING MODE */
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <FormSection
+                icon={Camera}
+                title="Edit Avatar & Details"
+                description="Update your photo, name, and username"
+              >
+                <div className="flex items-center gap-6 pb-6 border-b border-border">
                   <div className="group relative">
                     <button
                       type="button"
                       onClick={handleAvatarClick}
-                      disabled={!isEditing}
-                      className={`relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 ${isEditing ? 'cursor-pointer' : 'cursor-default'}`}
+                      className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-border bg-brand-50 cursor-pointer"
                       aria-label="Change profile picture"
                     >
                       {previewUrl || profile.profilePicture ? (
                         <img src={previewUrl || profile.profilePicture} alt="Profile" className="h-full w-full object-cover" />
                       ) : (
-                        <span className="text-lg font-semibold text-slate-200">
+                        <span className="text-2xl font-semibold text-brand-700">
                           {profile.firstName?.charAt(0)}
                           {profile.lastName?.charAt(0)}
                         </span>
                       )}
 
-                      {isEditing ? (
-                        <span className="absolute inset-0 flex items-center justify-center bg-slate-950/60 opacity-0 transition group-hover:opacity-100">
-                          <Camera className="h-5 w-5 text-white" />
-                        </span>
-                      ) : null}
+                      <span className="absolute inset-0 flex items-center justify-center bg-slate-900/60 opacity-0 transition group-hover:opacity-100">
+                        <Camera className="h-6 w-6 text-white" />
+                      </span>
                     </button>
                     <input
                       ref={fileInputRef}
@@ -281,102 +347,86 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                      {profile.firstName} {profile.lastName}
-                    </h1>
-                    <Badge className="border-white/10 bg-white/10 text-slate-200">{capitalize(profile.role)}</Badge>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleAvatarClick}
+                      className="text-sm font-semibold text-brand-700 hover:text-brand-800"
+                    >
+                      Change photo (JPG, PNG, WEBP - Max 5MB)
+                    </button>
                   </div>
                 </div>
 
-                {!isEditing ? (
-                  <Button type="button" onClick={handleEditClick} variant="secondary" className="border-white/10 bg-white/5 text-slate-100 hover:bg-white/10">
-                    <Pencil className="h-4 w-4" />
-                    Edit profile
-                  </Button>
-                ) : null}
-              </div>
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2">
+                      First Name *
+                    </label>
+                    <input
+                      className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      placeholder="First name"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      disabled={isBusy}
+                      required
+                    />
+                  </div>
 
-              {isEditing ? (
-                <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-                  {isEditing ? (
-                    <button type="button" onClick={handleAvatarClick} className="text-sm font-medium text-cyan-300 hover:text-cyan-200">
-                      Change photo
-                    </button>
-                  ) : null}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      placeholder="Last name"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      disabled={isBusy}
+                      required
+                    />
+                  </div>
 
-                  <input
-                    className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400/40"
-                    placeholder="First name"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                  />
-                  <input
-                    className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400/40"
-                    placeholder="Last name"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                  />
-                  <input
-                    className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400/40"
-                    placeholder="Username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                  />
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary mb-2">
+                      Username *
+                    </label>
+                    <input
+                      className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
+                      placeholder="Username"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      disabled={isBusy}
+                      required
+                    />
+                  </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <Button type="submit" disabled={isBusy} className="flex-1 bg-cyan-500 text-slate-950 hover:bg-cyan-400">
-                      {uploading ? 'Uploading photo...' : saving ? 'Saving...' : 'Save changes'}
-                    </Button>
+                  <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:justify-end">
                     <Button
                       type="button"
                       variant="secondary"
+                      size="lg"
                       onClick={handleCancel}
                       disabled={isBusy}
-                      className="flex-1 border-white/10 bg-white/5 text-slate-100 hover:bg-white/10"
                     >
                       <X className="h-4 w-4" />
                       Cancel
                     </Button>
-                  </div>
-                </form>
-              ) : (
-                <div className="mt-8 grid gap-5 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">First name</p>
-                    <p className="mt-1 text-sm text-slate-100">{profile.firstName}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Last name</p>
-                    <p className="mt-1 text-sm text-slate-100">{profile.lastName}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Username</p>
-                    <p className="mt-1 text-sm text-slate-100">{profile.username}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Email</p>
-                    <p className="mt-1 text-sm text-slate-100">{profile.email}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Role</p>
-                    <p className="mt-1 text-sm text-slate-100">{capitalize(profile.role)}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Joined date</p>
-                    <p className="mt-1 text-sm text-slate-100">{formatCreatedAt(profile.createdAt)}</p>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      disabled={isBusy}
+                      className="px-8"
+                    >
+                      {uploading ? 'Uploading photo...' : saving ? 'Saving...' : 'Save changes'}
+                    </Button>
                   </div>
                 </div>
-              )}
-            </Card>
+              </FormSection>
+            </form>
           )}
         </div>
       </PageContainer>

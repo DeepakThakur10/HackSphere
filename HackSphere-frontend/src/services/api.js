@@ -32,6 +32,8 @@ export const getHackathonByIdRequest = (id) => api.get(`/hackathons/${id}`);
 export const getOrganizerHackathonsRequest = (params = {}) =>
   api.get('/hackathons/mine', { params });
 
+export const createHackathonRequest = (payload) => api.post('/hackathons', payload);
+
 export const registerForHackathonRequest = ({ hackathonId, teamName }) => api.post('/registrations', { hackathonId, teamName });
 
 export const getRegistrationsRequest = () => api.get('/registrations');

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Filter, Layers3, Search, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageContainer from '../../components/common/PageContainer';
+import PageHero from '../../components/common/PageHero';
+import EmptyState from '../../components/common/EmptyState';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -39,7 +41,6 @@ function capitalize(value) {
   if (!value) {
     return '';
   }
-
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
@@ -47,7 +48,6 @@ function formatCurrency(value) {
   if (!value) {
     return 'Free';
   }
-
   return currencyFormatter.format(value);
 }
 
@@ -55,20 +55,14 @@ function formatDateRange(start, end) {
   if (!start || !end) {
     return 'Dates coming soon';
   }
-
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-
-  return `${dateFormatter.format(startDate)} - ${dateFormatter.format(endDate)}`;
+  return `${dateFormatter.format(new Date(start))} - ${dateFormatter.format(new Date(end))}`;
 }
 
 function getOrganizerName(createdBy) {
   if (!createdBy) {
     return 'HackSphere Organizer';
   }
-
   const fullName = [createdBy.firstName, createdBy.lastName].filter(Boolean).join(' ');
-
   return fullName || createdBy.email || 'HackSphere Organizer';
 }
 
@@ -93,22 +87,10 @@ function mapHackathon(hackathon) {
 }
 
 function getStatusLabel(status) {
-  if (status === 'registration_closed') {
-    return 'Registration closed';
-  }
-
-  if (status === 'ongoing') {
-    return 'Ongoing';
-  }
-
-  if (status === 'completed') {
-    return 'Completed';
-  }
-
-  if (status === 'cancelled') {
-    return 'Cancelled';
-  }
-
+  if (status === 'registration_closed') return 'Registration closed';
+  if (status === 'ongoing') return 'Ongoing';
+  if (status === 'completed') return 'Completed';
+  if (status === 'cancelled') return 'Cancelled';
   return 'Published';
 }
 
@@ -154,37 +136,11 @@ export default function HackathonsPage() {
 
   const trackOptions = useMemo(() => {
     const trackSet = new Set();
-
     hackathons.forEach((hackathon) => {
       hackathon.tracks.forEach((track) => trackSet.add(track));
     });
-
     return ['all', ...Array.from(trackSet).sort((left, right) => left.localeCompare(right))];
   }, [hackathons]);
-
-  const summary = useMemo(() => {
-    const modeCounts = hackathons.reduce(
-      (accumulator, hackathon) => {
-        const normalizedMode = hackathon.mode || 'hybrid';
-        accumulator.total += 1;
-        accumulator.modes.add(normalizedMode);
-        accumulator.prize += Number(hackathon.prizePool || 0);
-        return accumulator;
-      },
-      {
-        total: 0,
-        modes: new Set(),
-        prize: 0,
-      }
-    );
-
-    return [
-      { label: 'Published hackathons', value: modeCounts.total.toString().padStart(2, '0') },
-      { label: 'Active modes', value: modeCounts.modes.size.toString().padStart(2, '0') },
-      { label: 'Total prize pool', value: formatCurrency(modeCounts.prize) },
-      { label: 'Tracks covered', value: trackOptions.length > 1 ? String(trackOptions.length - 1).padStart(2, '0') : '00' },
-    ];
-  }, [hackathons, trackOptions]);
 
   const filteredHackathons = useMemo(() => {
     const normalizedSearchTerm = searchTerm.trim().toLowerCase();
@@ -212,15 +168,12 @@ export default function HackathonsPage() {
       if (sortValue === 'prize-desc') {
         return Number(right.prizePool || 0) - Number(left.prizePool || 0);
       }
-
       if (sortValue === 'prize-asc') {
         return Number(left.prizePool || 0) - Number(right.prizePool || 0);
       }
-
       if (sortValue === 'start-asc') {
         return new Date(left.hackathonStart || left.createdAt).getTime() - new Date(right.hackathonStart || right.createdAt).getTime();
       }
-
       return new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime();
     });
 
@@ -249,65 +202,47 @@ export default function HackathonsPage() {
     setSortValue('latest');
   };
 
-  const hasActiveFilters =
-    searchTerm.trim().length > 0 || selectedMode !== 'all' || selectedTrack !== 'all' || sortValue !== 'latest';
-
   return (
-    <section className="relative overflow-hidden bg-slate-950 py-10 text-slate-100 sm:py-14">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.14),transparent_24%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_26%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,1))]" />
-      <PageContainer className="relative">
+    <section className="pb-16 text-text-primary">
+      {/* Compact Page Hero */}
+      <PageHero
+        badge="Discover Hackathons"
+        title="Find your next build-worthy hackathon"
+        description="Browse live opportunities, refine by track or mode, and move into the event details flow when you are ready to register."
+        className="py-8 sm:py-10"
+      />
+
+      {/* Main Discovery Container */}
+      <PageContainer className="pt-6">
         <div className="mx-auto max-w-7xl space-y-8">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-[0_24px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-10">
-            <div className="max-w-3xl space-y-5">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
-                <Sparkles className="h-4 w-4" />
-                Discover hackathons
-              </div>
-              <div className="space-y-3">
-                <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">Find your next build-worthy hackathon</h1>
-                <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-                  Browse live opportunities from the backend, refine by track and mode, and move into the event details flow when you are ready to register.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {summary.map((item) => (
-                <Card key={item.label} className="border-white/10 bg-white/5 p-5 text-slate-100 shadow-none backdrop-blur-xl">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{item.label}</p>
-                  <p className="mt-3 text-2xl font-semibold tracking-tight text-white">{item.value}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
+          {/* Filters Bar - Immediately Visible */}
+          <Card className="p-6">
             <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_auto] xl:items-end">
               <label className="block">
-                <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
                   <Search className="h-4 w-4" />
                   Search
                 </span>
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-slate-100 focus-within:border-cyan-400/40">
-                  <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                <div className="flex items-center gap-3 rounded-2xl border border-border bg-white px-4 py-3 text-text-primary focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-500/20">
+                  <Search className="h-4 w-4 shrink-0 text-text-muted" />
                   <input
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
                     placeholder="Search title, organizer, track, or location"
-                    className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                    className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
                   />
                 </div>
               </label>
 
               <label className="block">
-                <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
                   <Filter className="h-4 w-4" />
                   Mode
                 </span>
                 <select
                   value={selectedMode}
                   onChange={(event) => setSelectedMode(event.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400/40"
+                  className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                 >
                   {modeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -318,14 +253,14 @@ export default function HackathonsPage() {
               </label>
 
               <label className="block">
-                <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
                   <Layers3 className="h-4 w-4" />
                   Track
                 </span>
                 <select
                   value={selectedTrack}
                   onChange={(event) => setSelectedTrack(event.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400/40"
+                  className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                 >
                   <option value="all">All tracks</option>
                   {trackOptions
@@ -339,14 +274,14 @@ export default function HackathonsPage() {
               </label>
 
               <label className="block">
-                <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
                   <SlidersHorizontal className="h-4 w-4" />
                   Sort by
                 </span>
                 <select
                   value={sortValue}
                   onChange={(event) => setSortValue(event.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400/40"
+                  className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20"
                 >
                   {sortOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -360,179 +295,151 @@ export default function HackathonsPage() {
                 type="button"
                 variant="secondary"
                 onClick={clearFilters}
-                className="border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 hover:bg-white/10"
+                className="h-[46px]"
               >
                 Clear
               </Button>
             </div>
-          </div>
+          </Card>
 
+          {/* Hackathon List Grid */}
           {loading ? (
             <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index} className="border-white/10 bg-white/5 p-0 text-slate-100 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-                  <div className="space-y-5 p-6">
-                    <div className="h-6 w-24 rounded-full bg-white/10" />
-                    <div className="h-7 w-4/5 rounded-xl bg-white/10" />
-                    <div className="h-4 w-full rounded-full bg-white/10" />
-                    <div className="h-4 w-5/6 rounded-full bg-white/10" />
-                    <div className="grid gap-3 pt-3 sm:grid-cols-2">
-                      <div className="h-12 rounded-2xl bg-white/10" />
-                      <div className="h-12 rounded-2xl bg-white/10" />
-                    </div>
-                  </div>
-                </Card>
+                <Card key={index} className="h-64 animate-pulse bg-surfaceMuted" />
               ))}
             </div>
           ) : error ? (
-            <Card className="border-white/10 bg-white/5 p-8 text-center text-slate-100 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-              <p className="text-lg font-semibold text-white">Could not load hackathons</p>
-              <p className="mt-3 text-sm leading-6 text-slate-300">{error}</p>
-              <div className="mt-6 flex justify-center">
-                <Button
-                  type="button"
-                  onClick={() => window.location.reload()}
-                  className="bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-                >
-                  Try again
-                </Button>
-              </div>
-            </Card>
+            <EmptyState
+              icon={Sparkles}
+              title="Could not load hackathons"
+              description={error}
+              actionText="Try again"
+              onActionClick={() => window.location.reload()}
+            />
           ) : filteredHackathons.length === 0 ? (
-            <Card className="border-white/10 bg-white/5 p-8 text-center text-slate-100 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-              <p className="text-lg font-semibold text-white">No hackathons match your filters</p>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
-                Try a wider search, switch the mode filter back to all, or clear the track filter to discover more events.
-              </p>
-              <div className="mt-6 flex justify-center">
-                <Button type="button" onClick={clearFilters} className="bg-cyan-500 text-slate-950 hover:bg-cyan-400">
-                  Reset filters
-                </Button>
-              </div>
-            </Card>
+            <EmptyState
+              icon={Search}
+              title="No hackathons match your filters"
+              description="Try a wider search, switch the mode filter back to all, or clear the track filter to discover more events."
+              actionText="Reset filters"
+              onActionClick={clearFilters}
+            />
           ) : (
             <>
               <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
                 {visibleHackathons.map((hackathon) => (
                   <Card
                     key={hackathon.id}
-                    className="group flex h-full flex-col border-white/10 bg-white/5 p-0 text-slate-100 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl"
+                    className="group flex h-full flex-col justify-between transition hover:-translate-y-1 hover:shadow-card p-6"
                   >
-                    <div className="flex h-full flex-col justify-between p-6">
-                      <div className="space-y-5">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-3">
-                            <div className="flex flex-wrap gap-2">
-                              <Badge className="border-cyan-400/20 bg-cyan-400/10 text-cyan-200">{getStatusLabel(hackathon.status)}</Badge>
-                              <Badge className="border-white/10 bg-white/10 text-slate-200">{capitalize(hackathon.mode)}</Badge>
-                            </div>
-                            <h2 className="text-xl font-semibold tracking-tight text-white">{hackathon.title}</h2>
-                            <p className="text-sm leading-6 text-slate-300">{hackathon.description}</p>
-                          </div>
-                        </div>
+                    <div className="space-y-5">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge>{getStatusLabel(hackathon.status)}</Badge>
+                        <Badge className="bg-surfaceMuted text-text-secondary border-border">{capitalize(hackathon.mode)}</Badge>
+                      </div>
 
-                        <div className="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/40 p-4 text-sm text-slate-300 sm:grid-cols-2">
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Organizer</p>
-                            <p className="mt-2 text-slate-100">{hackathon.organizer}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Location</p>
-                            <p className="mt-2 text-slate-100">{hackathon.location}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Registration</p>
-                            <p className="mt-2 text-slate-100">{formatDateRange(hackathon.registrationStart, hackathon.registrationEnd)}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Event dates</p>
-                            <p className="mt-2 text-slate-100">{formatDateRange(hackathon.hackathonStart, hackathon.hackathonEnd)}</p>
-                          </div>
-                        </div>
+                      <div>
+                        <h2 className="text-xl font-semibold tracking-tight text-text-primary">{hackathon.title}</h2>
+                        <p className="mt-2 text-sm leading-6 text-text-secondary line-clamp-2">{hackathon.description}</p>
+                      </div>
 
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between gap-4">
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Prize pool</p>
-                            <p className="text-lg font-semibold text-white">{formatCurrency(hackathon.prizePool)}</p>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {hackathon.tracks.length > 0 ? (
-                              hackathon.tracks.map((track) => (
-                                <span
-                                  key={track}
-                                  className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200"
-                                >
-                                  {track}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200">
-                                General
+                      <div className="grid gap-3 rounded-2xl border border-border bg-brand-50/30 p-4 text-sm text-text-secondary sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Organizer</p>
+                          <p className="mt-1 font-medium text-text-primary">{hackathon.organizer}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Location</p>
+                          <p className="mt-1 font-medium text-text-primary">{hackathon.location}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Registration</p>
+                          <p className="mt-1 font-medium text-text-primary">{formatDateRange(hackathon.registrationStart, hackathon.registrationEnd)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Event dates</p>
+                          <p className="mt-1 font-medium text-text-primary">{formatDateRange(hackathon.hackathonStart, hackathon.hackathonEnd)}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Prize pool</p>
+                          <p className="text-lg font-semibold text-text-primary">{formatCurrency(hackathon.prizePool)}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {hackathon.tracks.length > 0 ? (
+                            hackathon.tracks.map((track) => (
+                              <span
+                                key={track}
+                                className="inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700"
+                              >
+                                {track}
                               </span>
-                            )}
-                          </div>
+                            ))
+                          ) : (
+                            <span className="inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+                              General
+                            </span>
+                          )}
                         </div>
                       </div>
+                    </div>
 
-                      <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-3 text-sm text-slate-400">
-                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5">
-                            <Sparkles className="h-4 w-4 text-cyan-300" />
-                          </span>
-                          <div>
-                            <p className="font-medium text-slate-100">Live from backend</p>
-                            <p>Updated on {dateFormatter.format(new Date(hackathon.createdAt || Date.now()))}</p>
-                          </div>
-                        </div>
-
-                        <Button
-                          as={Link}
-                          to={`/hackathons/${hackathon.id}`}
-                          className="bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-                        >
-                          View details
-                        </Button>
+                    <div className="mt-8 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="text-xs text-text-muted">
+                        Updated {dateFormatter.format(new Date(hackathon.createdAt || Date.now()))}
                       </div>
+
+                      <Button
+                        as={Link}
+                        to={`/hackathons/${hackathon.id}`}
+                        size="sm"
+                      >
+                        View details
+                      </Button>
                     </div>
                   </Card>
                 ))}
               </div>
 
-              <div className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-slate-300">
-                  Showing <span className="font-semibold text-white">{startIndex + 1}</span> to{' '}
-                  <span className="font-semibold text-white">{Math.min(startIndex + pageSize, filteredHackathons.length)}</span> of{' '}
-                  <span className="font-semibold text-white">{filteredHackathons.length}</span> hackathons
+              {/* Pagination Bar */}
+              <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-text-secondary">
+                  Showing <span className="font-semibold text-text-primary">{startIndex + 1}</span> to{' '}
+                  <span className="font-semibold text-text-primary">{Math.min(startIndex + pageSize, filteredHackathons.length)}</span> of{' '}
+                  <span className="font-semibold text-text-primary">{filteredHackathons.length}</span> hackathons
                 </p>
 
                 <div className="flex items-center gap-3">
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}
                     disabled={safeCurrentPage === 1}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Previous
-                  </button>
+                  </Button>
 
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <span className="rounded-full border border-white/10 bg-slate-900/70 px-3 py-2 text-slate-100">
-                      Page {safeCurrentPage} of {totalPages}
-                    </span>
-                  </div>
+                  <span className="text-sm font-medium text-text-secondary">
+                    Page {safeCurrentPage} of {totalPages}
+                  </span>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}
                     disabled={safeCurrentPage === totalPages}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Next
                     <ChevronRight className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              </Card>
             </>
           )}
         </div>

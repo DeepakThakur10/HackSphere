@@ -7,6 +7,7 @@ import LoginPage from '../pages/Login/LoginPage';
 import SignupPage from '../pages/Signup/SignupPage';
 import HackathonsPage from '../pages/Hackathons/HackathonsPage';
 import HackathonDetailsPage from '../pages/HackathonDetails/HackathonDetailsPage';
+import CreateHackathonPage from '../pages/CreateHackathon/CreateHackathonPage';
 import DashboardPage from '../pages/Dashboard/DashboardPage';
 import ProfilePage from '../pages/Profile/ProfilePage';
 import NotFoundPage from '../pages/NotFound/NotFoundPage';
@@ -26,6 +27,7 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/hackathons/create" element={<CreateHackathonPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 

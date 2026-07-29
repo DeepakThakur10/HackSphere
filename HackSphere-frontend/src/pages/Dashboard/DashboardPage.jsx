@@ -17,6 +17,9 @@ import {
   Rocket,
 } from 'lucide-react';
 import PageContainer from '../../components/common/PageContainer';
+import PageHero from '../../components/common/PageHero';
+import StatCard from '../../components/common/StatCard';
+import EmptyState from '../../components/common/EmptyState';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -33,15 +36,6 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 });
 
-// TODO: no "/hackathons/create" (or similar) route exists in AppRoutes.jsx yet.
-// Flip this to true once a Create Hackathon route/page is added so the
-// organizer quick action below can safely link to it.
-const CREATE_HACKATHON_ROUTE_EXISTS = false;
-
-// TODO: Organizer statistic values are placeholders until the backend
-// exposes counts (Total/Published/Draft hackathons and Total Registrations).
-// GET /api/hackathons/mine now returns the organizer's own hackathon list,
-// but not aggregate counts across all pages — see conversation notes.
 const organizerStatCards = [
   {
     key: 'total',
@@ -69,7 +63,6 @@ function capitalize(value) {
   if (!value) {
     return '';
   }
-
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
@@ -77,71 +70,15 @@ function formatDateRange(start, end) {
   if (!start || !end) {
     return 'Dates coming soon';
   }
-
   return `${dateFormatter.format(new Date(start))} - ${dateFormatter.format(new Date(end))}`;
 }
 
-function getRegistrationStatusTone(status) {
-  if (status === 'cancelled') {
-    return 'border-l-red-400 bg-red-400/5';
-  }
-
-  return 'border-l-emerald-400 bg-emerald-400/5';
-}
-
-function getRegistrationBadgeTone(status) {
-  if (status === 'cancelled') {
-    return 'border-red-400/20 bg-red-400/10 text-red-200';
-  }
-
-  return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200';
-}
-
-function getHackathonStatusTone(status) {
-  if (status === 'draft') {
-    return 'border-l-amber-400 bg-amber-400/5';
-  }
-
-  if (status === 'cancelled') {
-    return 'border-l-red-400 bg-red-400/5';
-  }
-
-  return 'border-l-emerald-400 bg-emerald-400/5';
-}
-
-function getHackathonStatusBadgeTone(status) {
-  if (status === 'draft') {
-    return 'border-amber-400/20 bg-amber-400/10 text-amber-200';
-  }
-
-  if (status === 'cancelled') {
-    return 'border-red-400/20 bg-red-400/10 text-red-200';
-  }
-
-  return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200';
-}
-
 function getHackathonStatusLabel(status) {
-  if (status === 'draft') {
-    return 'Draft';
-  }
-
-  if (status === 'registration_closed') {
-    return 'Registration closed';
-  }
-
-  if (status === 'ongoing') {
-    return 'Ongoing';
-  }
-
-  if (status === 'completed') {
-    return 'Completed';
-  }
-
-  if (status === 'cancelled') {
-    return 'Cancelled';
-  }
-
+  if (status === 'draft') return 'Draft';
+  if (status === 'registration_closed') return 'Registration closed';
+  if (status === 'ongoing') return 'Ongoing';
+  if (status === 'completed') return 'Completed';
+  if (status === 'cancelled') return 'Cancelled';
   return 'Published';
 }
 
@@ -190,15 +127,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let active = true;
-
     const run = async () => {
       if (active) {
         await loadDashboard();
       }
     };
-
     run();
-
     return () => {
       active = false;
     };
@@ -206,7 +140,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let active = true;
-
     const loadDiscoverHackathons = async () => {
       try {
         setDiscoverLoading(true);
@@ -228,7 +161,6 @@ export default function DashboardPage() {
     };
 
     loadDiscoverHackathons();
-
     return () => {
       active = false;
     };
@@ -251,7 +183,7 @@ export default function DashboardPage() {
   useEffect(() => {
     let active = true;
 
-    if (profile?.role !== 'organizer') {
+    if (profile?.role !== 'organizer' && profile?.role !== 'admin') {
       return undefined;
     }
 
@@ -260,16 +192,13 @@ export default function DashboardPage() {
         await loadOrganizerHackathons();
       }
     };
-
     run();
-
     return () => {
       active = false;
     };
   }, [profile?.role, loadOrganizerHackathons]);
 
-  const isOrganizer = profile?.role === 'organizer';
-  const showCreateHackathonAction = isOrganizer && CREATE_HACKATHON_ROUTE_EXISTS;
+  const isOrganizer = profile?.role === 'organizer' || profile?.role === 'admin';
 
   const quickActions = [
     {
@@ -280,7 +209,7 @@ export default function DashboardPage() {
       type: 'link',
       to: '/hackathons',
     },
-    showCreateHackathonAction
+    isOrganizer
       ? {
           key: 'create',
           label: 'Create hackathon',
@@ -300,215 +229,163 @@ export default function DashboardPage() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 pb-16 text-slate-100">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.14),transparent_24%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_26%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,1))]" />
-
+    <section className="pb-16 text-text-primary">
       {error ? (
-        <PageContainer className="relative pt-14">
+        <PageContainer className="pt-14">
           <div className="mx-auto max-w-5xl space-y-8">
-            <Card className="border-white/10 bg-white/5 p-8 text-center text-slate-100 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-              <p className="text-lg font-semibold text-white">Could not load your dashboard</p>
-              <p className="mt-3 text-sm leading-6 text-slate-300">{error}</p>
-              <div className="mt-6 flex justify-center">
-                <Button type="button" onClick={loadDashboard} className="bg-cyan-500 text-slate-950 hover:bg-cyan-400">
-                  Try again
-                </Button>
-              </div>
-            </Card>
+            <EmptyState
+              icon={Rocket}
+              title="Could not load your dashboard"
+              description={error}
+              actionText="Try again"
+              onActionClick={loadDashboard}
+            />
           </div>
         </PageContainer>
       ) : (
         <>
-          {/* Hero Section */}
-          <div className="relative overflow-hidden border-b border-white/10">
-            {/* TODO(reactbits): Aurora / Animated Grid background goes here */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(56,189,248,0.16),transparent_55%)]" />
-            <PageContainer className="relative py-14 sm:py-20">
-              <div className="mx-auto max-w-5xl">
-                {loading ? (
-                  <div className="space-y-5">
-                    <div className="h-6 w-28 rounded-full bg-white/10" />
-                    <div className="h-11 w-3/4 rounded-xl bg-white/10" />
-                    <div className="h-4 w-full max-w-xl rounded-full bg-white/10" />
-                    <div className="h-4 w-40 rounded-full bg-white/10" />
-                    <div className="h-11 w-48 rounded-full bg-white/10" />
-                  </div>
+          {/* Page Hero */}
+          {loading ? (
+            <PageHero
+              badge="Dashboard"
+              title="Welcome back 👋"
+              description="Loading your personalized dashboard and active hackathons..."
+            />
+          ) : (
+            <PageHero
+              badge={capitalize(profile?.role || 'User')}
+              title={`Welcome back, ${profile?.firstName} 👋`}
+              description={
+                isOrganizer
+                  ? "Here's a quick look at your organizer activity — track your hackathons, keep an eye on registrations, and publish new events when you're ready."
+                  : "Here's a quick look at your hackathon journey — track registrations, discover new events, and keep your profile fresh."
+              }
+              actions={
+                isOrganizer ? (
+                  <>
+                    <Button as={Link} to="/hackathons/create" size="lg">
+                      <PlusCircle className="h-4 w-4" />
+                      Create hackathon
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="lg"
+                      onClick={scrollToOrganizerSection}
+                    >
+                      View organizer overview
+                    </Button>
+                  </>
                 ) : (
-                  <div className="space-y-4">
-                    <Badge className="border-cyan-400/20 bg-cyan-400/10 text-cyan-200">{capitalize(profile.role)}</Badge>
-                    <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                      Welcome back, {profile.firstName} 👋
-                    </h1>
-                    <p className="max-w-xl text-base leading-7 text-slate-300">
-                      {isOrganizer
-                        ? "Here's a quick look at your organizer activity — track your hackathons, keep an eye on registrations, and publish new events when you're ready."
-                        : "Here's a quick look at your hackathon journey — track registrations, discover new events, and keep your profile fresh."}
-                    </p>
-                    <p className="text-sm text-slate-400">{profile.email}</p>
-                    <div className="pt-2">
-                      {isOrganizer ? (
-                        <Button
-                          type="button"
-                          onClick={scrollToOrganizerSection}
-                          className="bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-                        >
-                          View organizer overview
-                        </Button>
-                      ) : (
-                        <Button as={Link} to="/hackathons" className="bg-cyan-500 text-slate-950 hover:bg-cyan-400">
-                          Browse hackathons
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </PageContainer>
-          </div>
+                  <Button as={Link} to="/hackathons" size="lg">
+                    Browse hackathons
+                  </Button>
+                )
+              }
+            />
+          )}
 
-          {isOrganizer ? (
-            <PageContainer className="relative pt-10">
+          {/* Organizer Section */}
+          {isOrganizer && !loading ? (
+            <PageContainer className="pt-10">
               <div ref={organizerSectionRef} className="mx-auto max-w-5xl space-y-10 scroll-mt-24">
-                {/* Organizer Overview */}
+                {/* Overview Header */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-semibold tracking-tight text-white">Organizer overview</h2>
-                    <p className="mt-1 text-sm leading-6 text-slate-400">
+                    <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Organizer overview</h2>
+                    <p className="mt-1 text-sm text-text-secondary">
                       Track your hackathons and registrations at a glance.
                     </p>
                   </div>
 
-                  {CREATE_HACKATHON_ROUTE_EXISTS ? (
-                    <Button as={Link} to="/hackathons/create" className="bg-cyan-500 text-slate-950 hover:bg-cyan-400">
-                      <PlusCircle className="h-4 w-4" />
-                      Create hackathon
-                    </Button>
-                  ) : (
-                    <div className="flex flex-col items-end gap-1.5">
-                      <Button
-                        type="button"
-                        disabled
-                        className="bg-cyan-500 text-slate-950 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                        Create hackathon
-                      </Button>
-                      <span className="text-xs text-slate-500">Coming soon</span>
-                    </div>
-                  )}
+                  <Button as={Link} to="/hackathons/create">
+                    <PlusCircle className="h-4 w-4" />
+                    Create hackathon
+                  </Button>
                 </div>
 
-                {/* Organizer Statistics */}
-                {loading ? (
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="h-32 rounded-3xl bg-white/10" />
-                    <div className="h-32 rounded-3xl bg-white/10" />
-                    <div className="h-32 rounded-3xl bg-white/10" />
-                    <div className="h-32 rounded-3xl bg-white/10" />
-                  </div>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    {organizerStatCards.map((stat) => {
-                      const Icon = stat.icon;
+                {/* Stat Cards */}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {organizerStatCards.map((stat) => (
+                    <StatCard
+                      key={stat.key}
+                      label={stat.label}
+                      icon={stat.icon}
+                      value="—"
+                      helpText="Live data coming soon"
+                    />
+                  ))}
+                </div>
 
-                      return (
-                        <Card
-                          key={stat.key}
-                          className="border-white/10 bg-white/5 p-6 shadow-[0_16px_36px_rgba(0,0,0,0.18)] backdrop-blur-xl"
-                        >
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          {/* TODO: replace placeholder "—" with real data once a
-                              stats-capable endpoint exists (see TODO above
-                              organizerStatCards). */}
-                          <p className="mt-4 text-2xl font-semibold tracking-tight text-white">—</p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{stat.label}</p>
-                          <p className="mt-3 text-xs text-slate-500">Live data coming soon</p>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* My Hackathons */}
-                <Card className="border-white/10 bg-white/5 p-6 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-8">
-                  <h2 className="text-xl font-semibold tracking-tight text-white">My hackathons</h2>
+                {/* My Hackathons Card */}
+                <Card className="p-6 sm:p-8 space-y-6">
+                  <h2 className="text-xl font-semibold tracking-tight text-text-primary">My hackathons</h2>
 
                   {organizerHackathonsLoading ? (
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      <div className="h-32 rounded-2xl bg-white/10" />
-                      <div className="h-32 rounded-2xl bg-white/10" />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="h-32 rounded-2xl bg-surfaceMuted animate-pulse" />
+                      <div className="h-32 rounded-2xl bg-surfaceMuted animate-pulse" />
                     </div>
                   ) : organizerHackathonsError ? (
-                    <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center">
-                      <p className="text-sm leading-6 text-slate-300">{organizerHackathonsError}</p>
-                      <Button
-                        type="button"
-                        onClick={loadOrganizerHackathons}
-                        className="mt-5 bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-                      >
-                        Try again
-                      </Button>
-                    </div>
+                    <EmptyState
+                      title="Unable to load hackathons"
+                      description={organizerHackathonsError}
+                      actionText="Try again"
+                      onActionClick={loadOrganizerHackathons}
+                    />
                   ) : organizerHackathons.length === 0 ? (
-                    <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
-                        <Rocket className="h-6 w-6" />
-                      </span>
-                      <h3 className="mt-4 text-base font-semibold text-white">Your hackathons will appear here</h3>
-                      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-400">
-                        Once you publish a hackathon, you'll be able to manage it and track its registrations from
-                        this section.
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={Rocket}
+                      title="Your hackathons will appear here"
+                      description="Once you publish a hackathon, you'll be able to manage it and track its registrations from this section."
+                      actionText="Create your first hackathon"
+                      actionTo="/hackathons/create"
+                    />
                   ) : (
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-2">
                       {organizerHackathons.map((hackathon) => (
-                        <div
+                        <Card
                           key={hackathon._id}
-                          className={`rounded-2xl border border-white/10 border-l-4 p-5 shadow-[0_12px_28px_rgba(0,0,0,0.16)] ${getHackathonStatusTone(hackathon.status)}`}
+                          className="group flex flex-col justify-between p-5 transition hover:-translate-y-1 hover:shadow-card"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <h3 className="text-lg font-semibold leading-snug text-white">{hackathon.title}</h3>
-                            <Badge className={getHackathonStatusBadgeTone(hackathon.status)}>
-                              {getHackathonStatusLabel(hackathon.status)}
-                            </Badge>
-                          </div>
-
-                          <div className="mt-4 space-y-2">
-                            <div className="flex items-start gap-2">
-                              <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                              <p className="text-sm text-slate-300">
-                                Registration: {formatDateRange(hackathon.registrationStart, hackathon.registrationEnd)}
-                              </p>
+                          <div>
+                            <div className="flex items-start justify-between gap-3">
+                              <h3 className="text-lg font-semibold leading-snug text-text-primary">{hackathon.title}</h3>
+                              <Badge>{getHackathonStatusLabel(hackathon.status)}</Badge>
                             </div>
 
-                            <div className="flex items-start gap-2">
-                              <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                              <p className="text-sm text-slate-300">
-                                Event: {formatDateRange(hackathon.hackathonStart, hackathon.hackathonEnd)}
-                              </p>
-                            </div>
+                            <div className="mt-4 space-y-2 text-sm text-text-secondary">
+                              <div className="flex items-start gap-2">
+                                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                                <p>Registration: {formatDateRange(hackathon.registrationStart, hackathon.registrationEnd)}</p>
+                              </div>
 
-                            <div className="flex items-start gap-2">
-                              {hackathon.mode === 'online' ? (
-                                <Wifi className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                              ) : (
-                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                              )}
-                              <p className="text-sm text-slate-300">{capitalize(hackathon.mode)}</p>
+                              <div className="flex items-start gap-2">
+                                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                                <p>Event: {formatDateRange(hackathon.hackathonStart, hackathon.hackathonEnd)}</p>
+                              </div>
+
+                              <div className="flex items-start gap-2">
+                                {hackathon.mode === 'online' ? (
+                                  <Wifi className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                                ) : (
+                                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                                )}
+                                <p>{capitalize(hackathon.mode)}</p>
+                              </div>
                             </div>
                           </div>
 
                           <Button
                             as={Link}
                             to={`/hackathons/${hackathon._id}`}
-                            className="mt-5 bg-cyan-500 text-slate-950 hover:bg-cyan-400"
+                            variant="secondary"
+                            size="sm"
+                            className="mt-5 self-start"
                           >
                             View details
                           </Button>
-                        </div>
+                        </Card>
                       ))}
                     </div>
                   )}
@@ -517,163 +394,147 @@ export default function DashboardPage() {
             </PageContainer>
           ) : null}
 
-          {!isOrganizer ? (
-            <PageContainer className="relative pt-10">
+          {/* Participant Section */}
+          {!isOrganizer && !loading ? (
+            <PageContainer className="pt-10">
               <div className="mx-auto max-w-5xl space-y-10">
                 {/* Quick Actions */}
                 <div>
-                  <h2 className="text-xl font-semibold tracking-tight text-white">Quick actions</h2>
-                  {loading ? (
-                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                      <div className="h-24 rounded-3xl bg-white/10" />
-                      <div className="h-24 rounded-3xl bg-white/10" />
-                    </div>
-                  ) : (
-                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                      {quickActions.map((action) => {
-                        const Icon = action.icon;
-                        const cardClassName =
-                          'group flex items-start gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 text-left shadow-[0_16px_36px_rgba(0,0,0,0.18)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.08] hover:shadow-[0_20px_45px_rgba(0,0,0,0.28)]';
+                  <h2 className="text-xl font-semibold tracking-tight text-text-primary">Quick actions</h2>
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    {quickActions.map((action) => {
+                      const Icon = action.icon;
+                      const cardClassName =
+                        'group flex items-start gap-4 rounded-2xl border border-border bg-white p-6 text-left shadow-soft transition hover:-translate-y-1 hover:shadow-card';
 
-                        const content = (
-                          <>
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
-                              <Icon className="h-5 w-5" />
-                            </span>
-                            <div className="flex-1">
-                              <p className="text-base font-semibold text-white">{action.label}</p>
-                              <p className="mt-1 text-sm leading-6 text-slate-400">{action.description}</p>
-                            </div>
-                            <ArrowRight className="mt-2 h-4 w-4 shrink-0 text-slate-500 transition group-hover:translate-x-1 group-hover:text-cyan-300" />
-                          </>
-                        );
+                      const content = (
+                        <>
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <div className="flex-1">
+                            <p className="text-base font-semibold text-text-primary">{action.label}</p>
+                            <p className="mt-1 text-sm leading-6 text-text-secondary">{action.description}</p>
+                          </div>
+                          <ArrowRight className="mt-2 h-4 w-4 shrink-0 text-text-muted transition group-hover:translate-x-1 group-hover:text-brand-600" />
+                        </>
+                      );
 
-                        if (action.type === 'scroll') {
-                          return (
-                            <button key={action.key} type="button" onClick={action.onClick} className={cardClassName}>
-                              {content}
-                            </button>
-                          );
-                        }
-
+                      if (action.type === 'scroll') {
                         return (
-                          <Link key={action.key} to={action.to} className={cardClassName}>
+                          <button key={action.key} type="button" onClick={action.onClick} className={cardClassName}>
                             {content}
-                          </Link>
+                          </button>
                         );
-                      })}
-                    </div>
-                  )}
+                      }
+
+                      return (
+                        <Link key={action.key} to={action.to} className={cardClassName}>
+                          {content}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* My Registrations */}
                 <Card
                   id="registrations"
                   ref={registrationsRef}
-                  className="scroll-mt-24 border-white/10 bg-white/5 p-6 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-8"
+                  className="scroll-mt-24 p-6 sm:p-8 space-y-6"
                 >
-                  <h2 className="text-xl font-semibold tracking-tight text-white">My registrations</h2>
+                  <h2 className="text-xl font-semibold tracking-tight text-text-primary">My registrations</h2>
 
-                  {loading ? (
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      <div className="h-32 rounded-2xl bg-white/10" />
-                      <div className="h-32 rounded-2xl bg-white/10" />
-                    </div>
-                  ) : registrations.length === 0 ? (
-                    <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
-                        <ClipboardList className="h-6 w-6" />
-                      </span>
-                      <h3 className="mt-4 text-base font-semibold text-white">No registrations yet</h3>
-                      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-400">
-                        You haven't registered for any hackathons yet. Browse hackathons to find one worth joining.
-                      </p>
-                      <Button as={Link} to="/hackathons" className="mt-5 bg-cyan-500 text-slate-950 hover:bg-cyan-400">
-                        Browse hackathons
-                      </Button>
-                    </div>
+                  {registrations.length === 0 ? (
+                    <EmptyState
+                      icon={ClipboardList}
+                      title="No registrations yet"
+                      description="You haven't registered for any hackathons yet. Browse hackathons to find one worth joining."
+                      actionText="Browse hackathons"
+                      actionTo="/hackathons"
+                    />
                   ) : (
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-2">
                       {registrations.map((registration) => (
-                        <div
+                        <Card
                           key={registration._id}
-                          className={`rounded-2xl border border-white/10 border-l-4 p-5 shadow-[0_12px_28px_rgba(0,0,0,0.16)] ${getRegistrationStatusTone(registration.status)}`}
+                          className="flex flex-col justify-between p-5 transition hover:shadow-card"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <h3 className="text-lg font-semibold leading-snug text-white">{registration.hackathon?.title}</h3>
-                            <Badge className={getRegistrationBadgeTone(registration.status)}>
-                              {capitalize(registration.status)}
-                            </Badge>
-                          </div>
-
-                          <div className="mt-4 space-y-2">
-                            <div className="flex items-start gap-2">
-                              <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                              <p className="text-sm text-slate-300">
-                                {formatDateRange(registration.hackathon?.hackathonStart, registration.hackathon?.hackathonEnd)}
-                              </p>
+                          <div>
+                            <div className="flex items-start justify-between gap-3">
+                              <h3 className="text-lg font-semibold leading-snug text-text-primary">{registration.hackathon?.title}</h3>
+                              <Badge>{capitalize(registration.status)}</Badge>
                             </div>
 
-                            {registration.teamName ? (
+                            <div className="mt-4 space-y-2 text-sm text-text-secondary">
                               <div className="flex items-start gap-2">
-                                <Users className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                                <p className="text-sm text-slate-300">{registration.teamName}</p>
+                                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                                <p>
+                                  {formatDateRange(registration.hackathon?.hackathonStart, registration.hackathon?.hackathonEnd)}
+                                </p>
                               </div>
-                            ) : null}
+
+                              {registration.teamName ? (
+                                <div className="flex items-start gap-2">
+                                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                                  <p>{registration.teamName}</p>
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
 
                           <Link
                             to={`/hackathons/${registration.hackathon?._id}`}
-                            className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
+                            className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 transition hover:text-brand-800"
                           >
                             View registration details
                             <ArrowRight className="h-3.5 w-3.5" />
                           </Link>
-                        </div>
+                        </Card>
                       ))}
                     </div>
                   )}
                 </Card>
 
                 {/* Discover More */}
-                <Card className="border-white/10 bg-white/5 p-6 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-8">
+                <Card className="p-6 sm:p-8 space-y-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="text-xl font-semibold tracking-tight text-white">Discover more</h2>
-                    <ShieldCheck className="h-5 w-5 text-cyan-300" />
+                    <h2 className="text-xl font-semibold tracking-tight text-text-primary">Discover more</h2>
+                    <ShieldCheck className="h-5 w-5 text-brand-600" />
                   </div>
 
                   {discoverLoading ? (
-                    <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                      <div className="h-36 rounded-2xl bg-white/10" />
-                      <div className="h-36 rounded-2xl bg-white/10" />
-                      <div className="h-36 rounded-2xl bg-white/10" />
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="h-36 rounded-2xl bg-surfaceMuted animate-pulse" />
+                      <div className="h-36 rounded-2xl bg-surfaceMuted animate-pulse" />
+                      <div className="h-36 rounded-2xl bg-surfaceMuted animate-pulse" />
                     </div>
                   ) : discoverError ? (
-                    <p className="mt-4 text-sm leading-7 text-slate-400">{discoverError}</p>
+                    <p className="text-sm leading-7 text-text-secondary">{discoverError}</p>
                   ) : discoverHackathons.length === 0 ? (
-                    <p className="mt-4 text-sm leading-7 text-slate-400">No published hackathons to show right now.</p>
+                    <p className="text-sm leading-7 text-text-secondary">No published hackathons to show right now.</p>
                   ) : (
-                    <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                    <div className="grid gap-4 sm:grid-cols-3">
                       {discoverHackathons.map((item) => (
                         <Link
                           key={item._id}
                           to={`/hackathons/${item._id}`}
-                          className="group flex h-full flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.08] hover:shadow-[0_16px_36px_rgba(0,0,0,0.24)]"
+                          className="group flex h-full flex-col justify-between rounded-2xl border border-border bg-white p-5 transition hover:-translate-y-1 hover:shadow-card"
                         >
                           <div>
-                            <Sparkles className="h-5 w-5 text-cyan-300" />
-                            <h3 className="mt-3 text-sm font-semibold leading-snug text-white">{item.title}</h3>
-                            <p className="mt-2 text-xs text-slate-400">
+                            <Sparkles className="h-5 w-5 text-brand-600" />
+                            <h3 className="mt-3 text-sm font-semibold leading-snug text-text-primary">{item.title}</h3>
+                            <p className="mt-2 text-xs text-text-secondary">
                               {formatDateRange(item.hackathonStart, item.hackathonEnd)}
                             </p>
                             {item.mode ? (
-                              <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
-                                {item.mode === 'online' ? <Wifi className="h-3.5 w-3.5 text-cyan-300" /> : <MapPin className="h-3.5 w-3.5 text-cyan-300" />}
+                              <p className="mt-2 flex items-center gap-1.5 text-xs text-text-secondary">
+                                {item.mode === 'online' ? <Wifi className="h-3.5 w-3.5 text-brand-600" /> : <MapPin className="h-3.5 w-3.5 text-brand-600" />}
                                 {capitalize(item.mode)}
                               </p>
                             ) : null}
                           </div>
-                          <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-cyan-300 transition group-hover:text-cyan-200">
+                          <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 transition group-hover:text-brand-800">
                             View details
                             <ArrowRight className="h-3.5 w-3.5" />
                           </span>
@@ -682,8 +543,8 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  <div className="mt-6">
-                    <Button as={Link} to="/hackathons" variant="secondary" className="border-white/10 bg-white/5 text-slate-100 hover:bg-white/10">
+                  <div>
+                    <Button as={Link} to="/hackathons" variant="secondary">
                       <Compass className="h-4 w-4" />
                       View all hackathons
                     </Button>
