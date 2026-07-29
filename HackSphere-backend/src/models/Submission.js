@@ -1,5 +1,23 @@
 import { Schema, model } from "mongoose";
 
+const versionHistorySchema = new Schema(
+    {
+        version: {
+            type: Number,
+            required: true,
+        },
+        projectName: String,
+        githubUrl: String,
+        demoUrl: String,
+        status: String,
+        timestamp: {
+            type: Date,
+            default: Date.now,
+        },
+    },
+    { _id: false }
+);
+
 const submissionSchema = new Schema(
     {
         hackathon: {
@@ -80,6 +98,8 @@ const submissionSchema = new Schema(
             enum: ["draft", "submitted", "under_review", "scored", "published"],
             default: "draft",
         },
+
+        versionHistory: [versionHistorySchema],
 
         submittedAt: {
             type: Date,

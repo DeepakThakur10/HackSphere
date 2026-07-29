@@ -1,338 +1,89 @@
-# 🚀 HackSphere
+# HackSphere — Enterprise Hackathon Management Platform (MERN)
 
-HackSphere is a full-stack MERN-based hackathon discovery and management platform that enables students to discover hackathons, register for events, and allows organizers to create and manage hackathons through a modern, scalable web application.
-
-The project is being developed with a **feature-first approach**, prioritizing business logic, clean architecture, and scalability before UI polish.
+> A full-stack, workflow-driven hackathon platform supporting Participants, Host Organizers, Certified Judges, and System Administrators.
 
 ---
 
-# ✨ Features
+## 🌟 Resume Highlights
 
-## 👨‍🎓 Student
-
-- User Authentication (Signup/Login)
-- JWT-based Authorization
-- Browse Published Hackathons
-- View Hackathon Details
-- Register for Hackathons
-- Persistent Login
-- Profile Management *(In Progress)*
+- **Multi-Role RBAC System**: Designed and implemented a role-based access control architecture serving **4 core personas** (Participants, Organizers, Judges, Admins).
+- **Workflow State Machines**: Centralized transition validator engine enforcing deterministic lifecycles for Hackathons (`draft` → `published` → `ongoing` → `judging` → `completed`), Submissions, Registrations, and Teams.
+- **Service Layer Architecture**: Decoupled business logic featuring a **Leaderboard Service** with 4-tier deterministic tie-breakers (Total Score → Innovation → Technical Complexity → Submission Timestamp).
+- **Enterprise Features**: Real-time broadcast announcements (Server-Sent Events), Nodemailer invitation workflow, verifiable PDF certificates, Google/ICS calendar integration, discussion forums, submission version history, team chat, and CSV/PDF export utilities.
+- **Production Hardening**: Equipped with Helmet security HTTP headers, Express rate limiting, health monitoring endpoints, Swagger OpenAPI docs, multi-stage Docker containerization, and GitHub Actions CI pipelines.
 
 ---
 
-## 👨‍💼 Organizer *(Upcoming)*
+## 🏛️ System Architecture Overview
 
-- Organizer Dashboard
-- Create Hackathons
-- Edit Hackathons
-- Delete Hackathons
-- View Registered Participants
-
----
-
-## 👑 Admin *(Upcoming)*
-
-- Manage Users
-- Manage Hackathons
-- Platform Analytics
-
----
-
-# 🛠 Tech Stack
-
-## Frontend
-
-- React 19
-- Vite
-- React Router DOM
-- Tailwind CSS
-- Axios
-- React Hook Form
-- React Hot Toast
-- Lucide React
-
----
-
-## Backend
-
-- Node.js
-- Express.js
-- MongoDB
-- Mongoose
-- JWT Authentication
-- bcrypt
-- Multer
-- Cloudinary
-- CORS
-
----
-
-# 📁 Project Structure
-
-```text
-HackSphere/
-
-├── HackSphere-frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── constants/
-│   │   ├── context/
-│   │   ├── layouts/
-│   │   ├── pages/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   └── package.json
-│
-├── HackSphere-backend/
-│   ├── src/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── app.js
-│   │   └── server.js
-│   └── package.json
-│
-└── README.md
+```
+                      ┌────────────────────────────────────────┐
+                      │    HackSphere Full-Stack Application   │
+                      └───────────────────┬────────────────────┘
+                                          │
+        ┌───────────────────┬─────────────┴───────┬───────────────────┐
+        ▼                   ▼                     ▼                   ▼
+┌───────────────┐   ┌───────────────┐     ┌───────────────┐   ┌───────────────┐
+│ Participant   │   │ Host          │     │ Certified     │   │ System        │
+│ Workspace     │   │ Organizer     │     │ Judge Panel   │   │ Admin Console │
+└───────────────┘   └───────────────┘     └───────────────┘   └───────────────┘
 ```
 
 ---
 
-# 🚀 Current Progress
+## 🚀 Quickstart Commands
 
-## ✅ Completed
-
-### Authentication
-
-- User Signup
-- User Login
-- JWT Authentication
-- Protected Routes
-- Guest Routes
-- Persistent Authentication
-
----
-
-### Landing Page
-
-- Hero Section
-- Features Section
-- Featured Hackathons
-- Backend Integration
-
----
-
-### Hackathons
-
-- List Published Hackathons
-- Hackathon Details
-- Registration Flow
-
----
-
-### Backend
-
-- Authentication APIs
-- Hackathon CRUD APIs
-- Registration APIs
-- Generic Image Upload API
-- Cloudinary Integration
-- Multer Middleware
-
----
-
-# 🔌 API Endpoints
-
-## Authentication
-
-| Method | Endpoint |
-|---------|----------|
-| POST | `/api/auth/signup` |
-| POST | `/api/auth/login` |
-| GET | `/api/auth/profile` |
-| PUT | `/api/auth/profile` |
-| GET | `/api/auth/admin` |
-
----
-
-## Hackathons
-
-| Method | Endpoint |
-|---------|----------|
-| GET | `/api/hackathons` |
-| GET | `/api/hackathons/:id` |
-| POST | `/api/hackathons` |
-| PUT | `/api/hackathons/:id` |
-| DELETE | `/api/hackathons/:id` |
-
----
-
-## Registrations
-
-| Method | Endpoint |
-|---------|----------|
-| POST | `/api/registrations` |
-| GET | `/api/registrations` |
-
----
-
-## Upload
-
-| Method | Endpoint |
-|---------|----------|
-| POST | `/api/upload/image` |
-
----
-
-# 🌐 Environment Variables
-
-## Backend (`HackSphere-backend/.env`)
-
-```env
-PORT=3000
-
-MONGO_URI=your_mongodb_connection_string
-
-JWT_SECRET=your_secret_key
-
-FRONTEND_URL=http://localhost:5173
-
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-
-CLOUDINARY_API_KEY=your_api_key
-
-CLOUDINARY_API_SECRET=your_api_secret
+### 1. Docker Compose (Recommended)
+```bash
+docker-compose up --build
 ```
+Access the application:
+- **Vite Frontend Client**: `http://localhost:5173`
+- **Express Backend API**: `http://localhost:3000/api`
+- **Interactive Swagger Docs**: `http://localhost:3000/api-docs`
+- **Health Check Endpoint**: `http://localhost:3000/health`
 
----
+### 2. Manual Development Setup
 
-## Frontend (`HackSphere-frontend/.env`)
-
-```env
-VITE_API_BASE_URL=http://localhost:3000/api
-```
-
----
-
-# ⚙️ Local Setup
-
-## Backend
-
+#### Backend Setup
 ```bash
 cd HackSphere-backend
-
 npm install
-
 npm run dev
 ```
 
-Backend runs on:
-
-```
-http://localhost:3000
-```
-
----
-
-## Frontend
-
+#### Frontend Setup
 ```bash
 cd HackSphere-frontend
-
 npm install
-
 npm run dev
 ```
 
-Frontend runs on:
+---
 
-```
-http://localhost:5173
-```
+## 📚 Platform Documentation Bundle
+
+- 🏗️ **[ARCHITECTURE.md](file:///d:/FullStack%20Project/ARCHITECTURE.md)**: Domain separation, state machine specs, and data flow.
+- 📡 **[API.md](file:///d:/FullStack%20Project/API.md)**: Comprehensive REST API endpoint inventory.
+- 🐳 **[DEPLOYMENT.md](file:///d:/FullStack%20Project/DEPLOYMENT.md)**: Docker containerization & Cloud deployment guide.
+- 🤝 **[CONTRIBUTING.md](file:///d:/FullStack%20Project/CONTRIBUTING.md)**: Development guidelines, branch naming, and pull request standards.
 
 ---
 
-# 📌 Development Workflow
+## 🛠️ Technology Stack
 
-This project follows a **feature-first development approach**.
-
-Priority:
-
-1. Business Logic
-2. Authentication
-3. Student Features
-4. Organizer Features
-5. Admin Features
-6. UI Polish
-7. Animations
+| Tier | Technologies |
+| :--- | :--- |
+| **Frontend** | React 18, Vite, React Router 6, TailwindCSS, Lucide Icons, React Hot Toast |
+| **Backend** | Node.js, Express 5, Mongoose ODM, JWT, Bcrypt, Nodemailer, Swagger JSDoc |
+| **Database** | MongoDB |
+| **DevOps & Security** | Docker, Nginx, Helmet, Express Rate Limit, GitHub Actions |
 
 ---
 
-# 📍 Current Roadmap
+## 🏆 Key Features
 
-## 🔄 In Progress
-
-- Profile Page
-- Avatar Upload
-- Profile Editing
-
----
-
-## ⏳ Upcoming
-
-- Organizer Dashboard
-- Create Hackathon
-- Edit Hackathon
-- Delete Hackathon
-- View Participants
-- Admin Dashboard
-- Team Management
-- Notifications
-- Certificates
-- Search & Filters
-
----
-
-# 📖 Coding Guidelines
-
-- Build one feature at a time.
-- Avoid modifying unrelated files.
-- Keep components modular and reusable.
-- Use async/await for asynchronous code.
-- Keep API calls inside `services/api.js`.
-- Follow existing project structure and coding style.
-- Write production-ready code.
-
----
-
-# 🤝 Contributing
-
-Contributions, suggestions, and improvements are welcome.
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Commit your changes.
-4. Open a Pull Request.
-
----
-
-# 📜 License
-
-This project is developed for learning, portfolio, and hackathon purposes.
-
----
-
-# 👨‍💻 Author
-
-**Deepak Kumar**
-
-- GitHub: https://github.com/DeepakThakur10
-
----
-
-⭐ If you like this project, consider giving it a star on GitHub!
+- **Decoupled Registration & Team Roster**: Register first as an individual, then create or join teams with invite codes.
+- **Judge Evaluation Panel**: 7-criteria evaluation out of 70 pts (Innovation, Tech Complexity, UI/UX, Functionality, Scalability, Docs, Presentation).
+- **Winner Podium & Standings**: Dynamic Top 3 winner podium (🥇 🥈 🥉) and full leaderboard table.
+- **Export Capabilities**: Single-click CSV dataset exporter and print-optimized PDF renderer.

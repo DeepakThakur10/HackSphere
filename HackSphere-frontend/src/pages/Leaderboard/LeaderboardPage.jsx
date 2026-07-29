@@ -5,9 +5,11 @@ import {
   Award,
   Clock,
   Crown,
+  Download,
   Github,
   Globe,
   Medal,
+  Printer,
   ShieldAlert,
   Trophy,
 } from 'lucide-react';
@@ -18,6 +20,7 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { getLeaderboardRequest } from '../../services/api';
+import { exportLeaderboardToCSV, printPageToPDF } from '../../utils/exportUtils';
 
 export default function LeaderboardPage() {
   const { id } = useParams();
@@ -72,10 +75,29 @@ export default function LeaderboardPage() {
         title={hackathon ? `${hackathon.title} Leaderboard` : 'Hackathon Leaderboard'}
         description="Authoritative project rankings, average judge scores, and winner announcements."
         actions={
-          <Button type="button" variant="secondary" size="md" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button type="button" variant="secondary" size="md" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            {leaderboard.length > 0 ? (
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  onClick={() => exportLeaderboardToCSV(leaderboard, hackathon?.title || 'Hackathon')}
+                >
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </Button>
+                <Button type="button" size="md" onClick={printPageToPDF}>
+                  <Printer className="h-4 w-4" />
+                  Print PDF
+                </Button>
+              </>
+            ) : null}
+          </div>
         }
       />
 

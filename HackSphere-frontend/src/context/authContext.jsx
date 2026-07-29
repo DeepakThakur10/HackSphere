@@ -32,6 +32,12 @@ export function AuthProvider({ children }) {
 
   const signup = async (payload) => {
     const response = await signupRequest(payload);
+    const { token: nextToken, data: nextUser, user: altUser } = response.data;
+    const finalUser = nextUser || altUser;
+
+    if (nextToken && finalUser) {
+      persistSession(nextToken, finalUser);
+    }
 
     return response.data;
   };

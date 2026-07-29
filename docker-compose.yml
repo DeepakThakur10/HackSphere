@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: hacksphere-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: hacksphere
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: ./HackSphere-backend
+      dockerfile: Dockerfile
+    container_name: hacksphere-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      MONGO_URI: mongodb://mongodb:27017/hacksphere
+      JWT_SECRET: hacksphere_super_secret_jwt_key_2026
+      FRONTEND_URL: http://localhost:5173
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ./HackSphere-frontend
+      dockerfile: Dockerfile
+    container_name: hacksphere-frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

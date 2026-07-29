@@ -86,12 +86,40 @@ export const createOrUpdateSubmission = async (req, res) => {
 
     let submission;
     if (existingSubmission) {
-      submission = await Submission.findByIdAndUpdate(existingSubmission._id, payload, {
-        new: true,
-        runValidators: true,
-      });
+      const currentHistory = Array.isArray(existingSubmission.versionHistory) ? existingSubmission.versionHistory : [];
+      const newVersion = currentHistory.length + 1;
+
+      const historySnapshot = {
+        version: newVersion,
+        projectName: projectName.trim(),
+        githubUrl: githubUrl.trim(),
+        demoUrl: demoUrl ? demoUrl.trim() : "",
+        status: newStatus,
+        timestamp: new Date(),
+      };
+
+      submission = await Submission.findByIdAndUpdate(
+        existingSubmission._id,
+        {
+          ...payload,
+          $push: { versionHistory: historySnapshot },
+        },
+        { new: true, runValidators: true }
+      );
     } else {
-      submission = await Submission.create(payload);
+      const historySnapshot = {
+        version: 1,
+        projectName: projectName.trim(),
+        githubUrl: githubUrl.trim(),
+        demoUrl: demoUrl ? demoUrl.trim() : "",
+        status: newStatus,
+        timestamp: new Date(),
+      };
+
+      submission = await Submission.create({
+        ...payload,
+        versionHistory: [historySnapshot],
+      });
     }
 
     if (isSubmit && teamId) {

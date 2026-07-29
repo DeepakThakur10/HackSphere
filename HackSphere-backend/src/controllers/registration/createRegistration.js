@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Registration from "../../models/Registration.js";
 import Hackathon from "../../models/Hackathon.js";
+import { sendTeamInviteEmail } from "../../utils/mailer.js";
 
 export const createRegistration = async (req, res) => {
     try {
@@ -90,6 +91,18 @@ export const createRegistration = async (req, res) => {
             team: null,
             status: "pending",
         });
+
+        // Dispatch team member invitation emails asynchronously
+        if (parsedMemberEmails.length > 0) {
+            parsedMemberEmails.forEach((email) => {
+                sendTeamInviteEmail({
+                    toEmail: email,
+                    teamName: teamName || `${hackathon.title} Team`,
+                    inviteCode: "PENDING_JOIN",
+                    hackathonTitle: hackathon.title,
+                });
+            });
+        }
 
         const populatedRegistration = await Registration.findById(registration._id)
             .populate("hackathon", "title mode registrationStart registrationEnd hackathonStart hackathonEnd status teamType minTeamSize maxTeamSize entryFee")

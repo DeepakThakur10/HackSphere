@@ -118,6 +118,25 @@ export const adminOverrideHackathonStatusRequest = (hackathonId, status) => api.
 
 export const adminDeleteHackathonRequest = (hackathonId) => api.delete(`/admin/hackathons/${hackathonId}`);
 
+// Real-Time Announcements & Discussions
+export const getAnnouncementsRequest = (hackathonId) => api.get(`/announcements/${hackathonId}`);
+
+export const createAnnouncementRequest = (payload) => api.post('/announcements', payload);
+
+export const getDiscussionsRequest = (hackathonId) => api.get(`/discussions/${hackathonId}`);
+
+export const createDiscussionRequest = (payload) => api.post('/discussions', payload);
+
+export const replyDiscussionRequest = (id, payload) => api.post(`/discussions/${id}/reply`, payload);
+
+// Public Organizer Profiles
+export const getOrganizerProfileRequest = (organizerId) => api.get(`/users/organizer/${organizerId}`);
+
+// Team Chat
+export const getTeamMessagesRequest = (teamId) => api.get(`/teams/${teamId}/messages`);
+
+export const sendTeamMessageRequest = (teamId, payload) => api.post(`/teams/${teamId}/messages`, payload);
+
 export const uploadImageRequest = (formData) =>
   api.post('/upload/image', formData, {
     headers: {

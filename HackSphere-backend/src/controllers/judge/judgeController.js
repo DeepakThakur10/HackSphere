@@ -1,7 +1,9 @@
+import crypto from "crypto";
 import User from "../../models/user.js";
 import HackathonJudge from "../../models/HackathonJudge.js";
 import Hackathon from "../../models/Hackathon.js";
-import bcrypt from "bcrypt";
+import JudgeInvitation from "../../models/JudgeInvitation.js";
+import { sendJudgeAssignmentNotificationEmail, sendJudgeInvitationEmail } from "../../utils/mailer.js";
 
 export const getAvailableJudges = async (req, res) => {
   try {
@@ -48,69 +50,120 @@ export const assignJudgeToHackathon = async (req, res) => {
     const { id } = req.params;
     const { judgeId, email } = req.body;
 
+    const hackathon = await Hackathon.findById(id);
+    if (!hackathon) {
+      return res.status(404).json({ success: false, message: "Hackathon not found" });
+    }
+
     if (!judgeId && (!email || !email.trim())) {
       return res.status(400).json({ success: false, message: "Judge ID or Email address is required" });
     }
 
-    let judgeUser = null;
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
     if (email && email.trim()) {
       const targetEmail = email.toLowerCase().trim();
-      judgeUser = await User.findOne({ email: targetEmail });
+      const existingUser = await User.findOne({ email: targetEmail });
 
-      if (!judgeUser) {
-        // Automatically register new user as judge if account does not exist yet
-        const hashedPassword = await bcrypt.hash("Judge@12345", 10);
-        const namePart = targetEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
-        const uniqueUsername = `${namePart}_judge_${Date.now().toString().slice(-4)}`;
+      if (existingUser) {
+        // Upgrade participant role to judge if needed
+        if (existingUser.role === "participant") {
+          existingUser.role = "judge";
+          await existingUser.save();
+        }
 
-        judgeUser = await User.create({
-          firstName: namePart,
-          lastName: "Judge",
-          email: targetEmail,
-          username: uniqueUsername,
-          password: hashedPassword,
-          role: "judge",
+        const existingAssignment = await HackathonJudge.findOne({ hackathon: id, judge: existingUser._id });
+        if (existingAssignment) {
+          if (existingAssignment.status === "removed") {
+            existingAssignment.status = "assigned";
+            existingAssignment.assignedBy = req.user.id;
+            await existingAssignment.save();
+          } else {
+            return res.status(400).json({ success: false, message: "Judge is already assigned to this hackathon" });
+          }
+        } else {
+          await HackathonJudge.create({
+            hackathon: id,
+            judge: existingUser._id,
+            assignedBy: req.user.id,
+            status: "assigned",
+          });
+        }
+
+        // Send email notification to existing user
+        const dashboardLink = `${frontendUrl}/judge/dashboard`;
+        await sendJudgeAssignmentNotificationEmail({
+          toEmail: targetEmail,
+          hackathonTitle: hackathon.title,
+          dashboardLink,
         });
-      } else if (judgeUser.role === "participant") {
-        // Upgrade role to judge
-        judgeUser.role = "judge";
-        await judgeUser.save();
+
+        const updatedAssignments = await HackathonJudge.find({ hackathon: id, status: { $ne: "removed" } })
+          .populate("judge", "firstName lastName email username role profilePicture");
+
+        return res.status(200).json({
+          success: true,
+          message: `Notification email sent and ${existingUser.email} assigned as Judge successfully!`,
+          data: updatedAssignments,
+        });
+      } else {
+        // NO automatic account creation! Send invitation email with token.
+        const token = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+        await JudgeInvitation.create({
+          email: targetEmail,
+          hackathon: id,
+          invitedBy: req.user.id,
+          token,
+          expiresAt,
+        });
+
+        const inviteLink = `${frontendUrl}/signup?inviteToken=${token}&role=judge&email=${encodeURIComponent(targetEmail)}`;
+        await sendJudgeInvitationEmail({
+          toEmail: targetEmail,
+          hackathonTitle: hackathon.title,
+          inviteLink,
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: `Invitation email sent to ${targetEmail}! When they click the link to register, they will be registered as a Judge and assigned automatically.`,
+        });
       }
     } else if (judgeId) {
-      judgeUser = await User.findById(judgeId);
-    }
-
-    if (!judgeUser) {
-      return res.status(404).json({ success: false, message: "Judge user not found" });
-    }
-
-    const existing = await HackathonJudge.findOne({ hackathon: id, judge: judgeUser._id });
-    if (existing) {
-      if (existing.status === "removed") {
-        existing.status = "assigned";
-        existing.assignedBy = req.user.id;
-        await existing.save();
-      } else {
-        return res.status(400).json({ success: false, message: "Judge is already assigned to this hackathon" });
+      const judgeUser = await User.findById(judgeId);
+      if (!judgeUser) {
+        return res.status(404).json({ success: false, message: "Judge user not found" });
       }
-    } else {
-      await HackathonJudge.create({
-        hackathon: id,
-        judge: judgeUser._id,
-        assignedBy: req.user.id,
-        status: "assigned",
+
+      const existingAssignment = await HackathonJudge.findOne({ hackathon: id, judge: judgeId });
+      if (existingAssignment) {
+        if (existingAssignment.status === "removed") {
+          existingAssignment.status = "assigned";
+          existingAssignment.assignedBy = req.user.id;
+          await existingAssignment.save();
+        } else {
+          return res.status(400).json({ success: false, message: "Judge is already assigned to this hackathon" });
+        }
+      } else {
+        await HackathonJudge.create({
+          hackathon: id,
+          judge: judgeId,
+          assignedBy: req.user.id,
+          status: "assigned",
+        });
+      }
+
+      const updatedAssignments = await HackathonJudge.find({ hackathon: id, status: { $ne: "removed" } })
+        .populate("judge", "firstName lastName email username role profilePicture");
+
+      return res.status(201).json({
+        success: true,
+        message: `Judge ${judgeUser.email} assigned successfully`,
+        data: updatedAssignments,
       });
     }
-
-    const updatedAssignments = await HackathonJudge.find({ hackathon: id, status: { $ne: "removed" } })
-      .populate("judge", "firstName lastName email username role profilePicture");
-
-    return res.status(201).json({
-      success: true,
-      message: `Judge ${judgeUser.email} assigned successfully`,
-      data: updatedAssignments,
-    });
   } catch (error) {
     return res.status(500).json({
       success: false,

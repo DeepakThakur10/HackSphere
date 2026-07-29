@@ -1,24 +1,37 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { UserPlus, UserCheck } from 'lucide-react';
+import { UserPlus, UserCheck, Award } from 'lucide-react';
 import PageContainer from '../../components/common/PageContainer';
 import PageHero from '../../components/common/PageHero';
 import FormSection from '../../components/common/FormSection';
 import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
 import { useAuth } from '../../context/authContext';
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signup } = useAuth();
+
+  const inviteToken = searchParams.get('inviteToken') || '';
+  const inviteRole = searchParams.get('role') || '';
+  const inviteEmail = searchParams.get('email') || '';
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     username: '',
-    email: '',
+    email: inviteEmail,
     password: '',
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (inviteEmail) {
+      setFormData((prev) => ({ ...prev, email: inviteEmail }));
+    }
+  }, [inviteEmail]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -46,9 +59,19 @@ export default function SignupPage() {
 
     try {
       setLoading(true);
-      await signup(formData);
-      toast.success('Account created! Sign in to continue.');
-      navigate('/login');
+      const res = await signup({
+        ...formData,
+        inviteToken,
+        role: inviteRole || (inviteToken ? 'judge' : undefined),
+      });
+
+      if (inviteToken || inviteRole === 'judge' || res?.data?.role === 'judge') {
+        toast.success('Judge account created successfully! Opening your Judge Dashboard.');
+        navigate('/judge/dashboard');
+      } else {
+        toast.success('Account created! Sign in to continue.');
+        navigate('/login');
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Unable to create account');
     } finally {
@@ -60,14 +83,32 @@ export default function SignupPage() {
     <section className="pb-16 text-text-primary">
       {/* Page Hero */}
       <PageHero
-        badge="Account Onboarding"
-        title="Join the HackSphere Community"
-        description="Create your account to register for hackathons, build innovative projects with teams, and host your own events."
+        badge={inviteToken ? 'Judge Invitation' : 'Account Onboarding'}
+        title={inviteToken ? 'Register as Invited Judge' : 'Join the HackSphere Community'}
+        description={
+          inviteToken
+            ? 'Complete your registration to access your judge evaluation panel and review assigned hackathon entries.'
+            : 'Create your account to register for hackathons, build innovative projects with teams, and host your own events.'
+        }
       />
 
       {/* Main Form Container */}
       <PageContainer className="pt-10">
-        <div className="mx-auto max-w-xl">
+        <div className="mx-auto max-w-xl space-y-6">
+          {inviteToken ? (
+            <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-4 flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-700">
+                <Award className="h-5 w-5" />
+              </span>
+              <div>
+                <Badge className="mb-1">Judge Invitation Token Detected</Badge>
+                <p className="text-xs text-text-secondary">
+                  Your account will automatically be assigned as an evaluation judge upon completion.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <FormSection
               icon={UserPlus}
@@ -168,7 +209,11 @@ export default function SignupPage() {
                     className="w-full justify-center"
                   >
                     <UserCheck className="h-4 w-4" />
-                    {loading ? 'Creating account...' : 'Create account'}
+                    {loading
+                      ? 'Creating account...'
+                      : inviteToken
+                      ? 'Register & Open Judge Dashboard'
+                      : 'Create account'}
                   </Button>
                 </div>
               </div>

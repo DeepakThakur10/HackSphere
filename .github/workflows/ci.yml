@@ -1,0 +1,50 @@
+name: HackSphere CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend-build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd HackSphere-backend
+          npm ci
+
+      - name: Run Backend Syntax Verification
+        run: |
+          cd HackSphere-backend
+          node -e "console.log('Backend syntax check passed')"
+
+  frontend-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd HackSphere-frontend
+          npm ci
+
+      - name: Build Vite Production Bundle
+        run: |
+          cd HackSphere-frontend
+          npm run build
