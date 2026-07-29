@@ -90,7 +90,9 @@ function getOrganizerName(createdBy) {
 }
 
 function isRegistrationOpen(hackathon) {
-  return hackathon.status === 'published' && new Date() <= new Date(hackathon.registrationEnd);
+  const now = new Date();
+
+  return now >= new Date(hackathon.registrationStart) && now <= new Date(hackathon.registrationEnd);
 }
 
 export default function HackathonDetailsPage() {
@@ -153,18 +155,18 @@ export default function HackathonDetailsPage() {
     setIsModalOpen(true);
   };
 
-  const handleRegistrationSubmit = async (payload) => {
+  const handleRegistrationSubmit = async ({ teamName }) => {
     if (submitting) {
       return;
     }
 
     try {
       setSubmitting(true);
-      await registerForHackathonRequest(id, payload);
+      await registerForHackathonRequest({ hackathonId: hackathon._id, teamName });
       toast.success('Registered successfully');
       setIsModalOpen(false);
     } catch (requestError) {
-      toast.error(requestError.response?.data?.message || requestError.message || 'Unable to register');
+      toast.error(requestError.response?.data?.message || 'Unable to register for this hackathon');
     } finally {
       setSubmitting(false);
     }

@@ -20,7 +20,7 @@ export const getProfile = async (req, res) => {
 		return res.status(200).json({
 			success: true,
 			message: "Profile fetched successfully",
-			user: buildProfileResponse(user),
+			data: buildProfileResponse(user),
 		});
 	} catch (error) {
 		return res.status(500).json({
@@ -69,7 +69,7 @@ export const updateProfile = async (req, res) => {
 		return res.status(200).json({
 			success: true,
 			message: "Profile updated successfully",
-			user: buildProfileResponse(user),
+			data: buildProfileResponse(user),
 		});
 	} catch (error) {
 		return res.status(500).json({

@@ -27,11 +27,8 @@ export const getHackathonsRequest = (params) => api.get('/hackathons', { params 
 
 export const getHackathonByIdRequest = (id) => api.get(`/hackathons/${id}`);
 
-// TODO: no Registration model/controller/route exists on the backend yet.
-// This is a placeholder so the UI has a single, real integration point.
-// Once a real endpoint exists (e.g. POST /hackathons/:id/register or
-// POST /registrations), replace the body below with the actual api.post call
-// and remove this simulated rejection.
-export const registerForHackathonRequest = () => Promise.reject(new Error('Registration is not available yet. Please check back soon.'));
+export const registerForHackathonRequest = ({ hackathonId, teamName }) => api.post('/registrations', { hackathonId, teamName });
+
+export const getRegistrationsRequest = () => api.get('/registrations');
 
 export default api;
