@@ -232,8 +232,8 @@ export default function ParticipantWorkspacePage() {
                     </p>
                   </div>
 
-                  {submissionStatus === 'published' ? (
-                    <Button as={Link} to="/hackathons" size="lg">
+                  {submissionStatus === 'published' || registration?.hackathon?.status === 'completed' || registration?.hackathon?.status === 'cancelled' ? (
+                    <Button as={Link} to={`/hackathons/${hackathonId}/leaderboard`} size="lg">
                       <Trophy className="h-4 w-4" />
                       View Leaderboard
                     </Button>

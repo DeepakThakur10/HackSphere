@@ -56,6 +56,14 @@ export const createOrUpdateSubmission = async (req, res) => {
       return res.status(404).json({ success: false, message: "Hackathon not found" });
     }
 
+    // Lock submissions if results are declared or hackathon is completed/cancelled
+    if (hackathon.status === "completed" || hackathon.status === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Submissions are locked as results have been declared for this hackathon.",
+      });
+    }
+
     let teamId = registration.team;
 
     let existingSubmission = null;

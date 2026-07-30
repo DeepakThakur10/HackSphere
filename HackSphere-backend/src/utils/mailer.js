@@ -14,7 +14,6 @@ const createTransporter = async () => {
     });
   }
 
-  // Fallback Ethereal test account for local development
   try {
     const testAccount = await nodemailer.createTestAccount();
     return nodemailer.createTransport({

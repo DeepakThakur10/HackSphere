@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Registration from "../../models/Registration.js";
 import Hackathon from "../../models/Hackathon.js";
+import HackathonJudge from "../../models/HackathonJudge.js";
 import { sendTeamInviteEmail } from "../../utils/mailer.js";
 
 export const createRegistration = async (req, res) => {
@@ -35,6 +36,20 @@ export const createRegistration = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "As the host organizer of this hackathon, you cannot register as a participant in your own event.",
+            });
+        }
+
+        // Prevent judge registration: Assigned judges cannot register for hackathons they are judging
+        const existingJudgeAssignment = await HackathonJudge.findOne({
+            hackathon: hackathonId,
+            judge: req.user.id,
+            status: { $ne: "removed" },
+        });
+
+        if (existingJudgeAssignment) {
+            return res.status(400).json({
+                success: false,
+                message: "As an assigned judge for this hackathon, you cannot register as a participant due to conflict of interest.",
             });
         }
 

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
 import PageContainer from '../common/PageContainer';
+import Logo from '../common/Logo';
 import { useAuth } from '../../context/authContext';
 
 function getInitials(user) {
@@ -63,10 +64,8 @@ export default function Navbar() {
       <PageContainer>
         <div className="flex h-20 items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 font-semibold text-text-primary">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-600 text-sm font-bold text-white shadow-soft">
-              HS
-            </span>
-            <span className="text-lg tracking-tight">HackSphere</span>
+            <Logo className="h-9 w-auto text-brand-600 drop-shadow-sm" />
+            <span className="text-lg tracking-tight font-bold">HackSphere</span>
           </Link>
 
           <nav className="hidden items-center gap-2 md:flex">

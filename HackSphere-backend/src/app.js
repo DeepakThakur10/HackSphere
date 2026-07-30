@@ -25,12 +25,12 @@ const app = express();
 app.use(helmet({ contentSecurityPolicy: false }));
 
 // Rate Limiting Protection (100 requests per 15 minutes per IP)
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
+/*const limiter = rateLimit({
+    windowMs: 150 * 60 * 1000,
     max: 200,
     message: { success: false, message: "Too many requests from this IP, please try again later." },
 });
-app.use('/api/', limiter);
+app.use('/api/', limiter);*/
 
 app.use(
     cors({

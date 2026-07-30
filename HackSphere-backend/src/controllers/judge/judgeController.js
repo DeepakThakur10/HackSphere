@@ -2,6 +2,7 @@ import crypto from "crypto";
 import User from "../../models/user.js";
 import HackathonJudge from "../../models/HackathonJudge.js";
 import Hackathon from "../../models/Hackathon.js";
+import Registration from "../../models/Registration.js";
 import JudgeInvitation from "../../models/JudgeInvitation.js";
 import { sendJudgeAssignmentNotificationEmail, sendJudgeInvitationEmail } from "../../utils/mailer.js";
 
@@ -66,6 +67,14 @@ export const assignJudgeToHackathon = async (req, res) => {
       const existingUser = await User.findOne({ email: targetEmail });
 
       if (existingUser) {
+        const participantRegistration = await Registration.findOne({ hackathon: id, user: existingUser._id });
+        if (participantRegistration) {
+          return res.status(400).json({
+            success: false,
+            message: `${existingUser.email} is already registered as a participant in this hackathon and cannot be assigned as a judge.`,
+          });
+        }
+
         // Upgrade participant role to judge if needed
         if (existingUser.role === "participant") {
           existingUser.role = "judge";
@@ -139,6 +148,14 @@ export const assignJudgeToHackathon = async (req, res) => {
       const judgeUser = await User.findById(judgeId);
       if (!judgeUser) {
         return res.status(404).json({ success: false, message: "Judge user not found" });
+      }
+
+      const participantRegistration = await Registration.findOne({ hackathon: id, user: judgeId });
+      if (participantRegistration) {
+        return res.status(400).json({
+          success: false,
+          message: `${judgeUser.email} is already registered as a participant in this hackathon and cannot be assigned as a judge.`,
+        });
       }
 
       const existingAssignment = await HackathonJudge.findOne({ hackathon: id, judge: judgeId });

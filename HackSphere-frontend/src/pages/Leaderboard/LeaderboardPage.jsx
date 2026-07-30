@@ -130,59 +130,226 @@ export default function LeaderboardPage() {
             />
           ) : (
             <>
-              {/* 1. Top 3 Winners Podium Component */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-6 w-6 text-amber-500" />
-                  <h2 className="text-2xl font-bold tracking-tight text-text-primary">Winner Podium</h2>
+              {/* 1. Winner Podium Header & Cards */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 border border-amber-300/40 shadow-sm">
+                    <Trophy className="h-5.5 w-5.5" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-text-primary">Winner Podium</h2>
+                    <p className="text-xs text-text-secondary">Official leaderboard standings & competition champions</p>
+                  </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3 items-end">
-                  {/* 2nd Place Runner-Up */}
+                {/* Podium Grid Layout */}
+                <div
+                  className={`grid gap-6 items-end ${
+                    leaderboard.length === 1
+                      ? 'max-w-md mx-auto grid-cols-1'
+                      : leaderboard.length === 2
+                      ? 'max-w-2xl mx-auto grid-cols-1 sm:grid-cols-2'
+                      : 'grid-cols-1 sm:grid-cols-3'
+                  }`}
+                >
+                  {/* 2nd Place (Runner-Up) */}
                   {runnerUp ? (
-                    <Card className="p-6 text-center border-slate-200 bg-slate-50/60 order-2 sm:order-1">
-                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-slate-700 shadow-soft">
-                        <Medal className="h-7 w-7" />
+                    <div className="order-2 sm:order-1 flex flex-col items-center">
+                      <div className="w-full rounded-2xl border border-slate-300 bg-gradient-to-b from-slate-50 via-white to-slate-100/90 p-6 text-center shadow-md relative overflow-hidden transition-all hover:border-slate-400 hover:shadow-lg">
+                        <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-slate-200/50 blur-xl pointer-events-none" />
+
+                        {/* Medal Avatar Badge */}
+                        <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-slate-300 to-slate-100 text-slate-700 shadow-md ring-4 ring-slate-200">
+                          <Medal className="h-8 w-8 text-slate-700" />
+                          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white font-bold text-xs shadow">
+                            2
+                          </span>
+                        </div>
+
+                        <Badge className="mt-4 bg-slate-200 text-slate-800 border-slate-300 font-bold">
+                          🥈 2nd Place (Runner-Up)
+                        </Badge>
+
+                        <h3 className="mt-3 text-lg font-bold text-text-primary tracking-tight">
+                          {runnerUp.team?.name || `${runnerUp.user?.firstName} ${runnerUp.user?.lastName}`}
+                        </h3>
+                        {runnerUp.user && runnerUp.team?.name ? (
+                          <p className="text-xs text-text-muted mt-0.5">@{runnerUp.user.username}</p>
+                        ) : null}
+
+                        <p className="mt-2 text-sm font-semibold text-brand-700">{runnerUp.projectName}</p>
+
+                        {/* Project Links */}
+                        <div className="mt-3 flex items-center justify-center gap-3 text-xs">
+                          {runnerUp.githubUrl ? (
+                            <a
+                              href={runnerUp.githubUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 font-medium text-text-secondary hover:text-brand-700"
+                            >
+                              <Github className="h-3.5 w-3.5" /> Code
+                            </a>
+                          ) : null}
+                          {runnerUp.demoUrl ? (
+                            <a
+                              href={runnerUp.demoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 font-medium text-brand-700 hover:text-brand-800"
+                            >
+                              <Globe className="h-3.5 w-3.5" /> Demo
+                            </a>
+                          ) : null}
+                        </div>
+
+                        {/* Score Pill */}
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-200/80 px-4 py-2 text-slate-800 border border-slate-300/60">
+                          <span className="text-xs text-slate-600 font-medium">Avg Score:</span>
+                          <span className="text-lg font-black">{runnerUp.averageScore}</span>
+                          <span className="text-xs text-slate-500">/ 70</span>
+                        </div>
                       </div>
-                      <Badge className="mt-3 bg-slate-200 text-slate-800">2nd Place (Runner-Up)</Badge>
-                      <h3 className="mt-3 text-lg font-bold text-text-primary">
-                        {runnerUp.team?.name || `${runnerUp.user?.firstName} ${runnerUp.user?.lastName}`}
-                      </h3>
-                      <p className="mt-1 text-xs text-brand-700 font-semibold">{runnerUp.projectName}</p>
-                      <p className="mt-3 text-xl font-extrabold text-slate-700">{runnerUp.averageScore} / 70</p>
-                    </Card>
+
+                      {/* Pedestal Step */}
+                      <div className="w-full bg-slate-200/90 border-t border-slate-300 rounded-b-xl py-2 text-center text-xs font-extrabold uppercase tracking-wider text-slate-700 shadow-inner sm:h-12 flex items-center justify-center">
+                        2nd Position
+                      </div>
+                    </div>
                   ) : null}
 
                   {/* 1st Place Champion */}
                   {champion ? (
-                    <StarBorder color="#f59e0b" className="order-1 sm:order-2 sm:-mt-4 rounded-2xl">
-                      <Card className="p-8 text-center border-amber-300 bg-amber-50/70 shadow-card">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-400 text-white shadow-soft">
-                          <Crown className="h-8 w-8" />
+                    <div className="order-1 sm:order-2 flex flex-col items-center sm:-mt-4">
+                      <StarBorder color="#f59e0b" className="w-full rounded-2xl">
+                        <div className="w-full rounded-2xl border-2 border-amber-400 bg-gradient-to-b from-amber-100/90 via-amber-50/60 to-white p-7 text-center shadow-xl relative overflow-hidden transition-all hover:border-amber-500">
+                          <div className="absolute top-0 right-0 h-32 w-32 translate-x-10 -translate-y-10 rounded-full bg-amber-300/50 blur-2xl pointer-events-none" />
+
+                          {/* Crown Avatar Badge */}
+                          <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-amber-950 shadow-lg ring-4 ring-amber-300/60">
+                            <Crown className="h-10 w-10 text-amber-950" />
+                            <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-600 text-white font-extrabold text-xs shadow-md border-2 border-white">
+                              1
+                            </span>
+                          </div>
+
+                          <Badge className="mt-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-amber-600 font-extrabold shadow-sm">
+                            🏆 1st Place (Champion)
+                          </Badge>
+
+                          <h3 className="mt-3 text-xl font-extrabold text-text-primary tracking-tight">
+                            {champion.team?.name || `${champion.user?.firstName} ${champion.user?.lastName}`}
+                          </h3>
+                          {champion.user && champion.team?.name ? (
+                            <p className="text-xs text-text-muted mt-0.5">@{champion.user.username}</p>
+                          ) : null}
+
+                          <p className="mt-2 text-sm font-bold text-brand-700">{champion.projectName}</p>
+
+                          {/* Project Links */}
+                          <div className="mt-3 flex items-center justify-center gap-3 text-xs">
+                            {champion.githubUrl ? (
+                              <a
+                                href={champion.githubUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 font-medium text-text-secondary hover:text-brand-700"
+                              >
+                                <Github className="h-3.5 w-3.5" /> Code
+                              </a>
+                            ) : null}
+                            {champion.demoUrl ? (
+                              <a
+                                href={champion.demoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 font-medium text-brand-700 hover:text-brand-800"
+                              >
+                                <Globe className="h-3.5 w-3.5" /> Demo
+                              </a>
+                            ) : null}
+                          </div>
+
+                          {/* Score Pill */}
+                          <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500/20 border border-amber-400/70 px-5 py-2 text-amber-950 shadow-sm">
+                            <span className="text-xs text-amber-800 font-semibold">Avg Score:</span>
+                            <span className="text-xl font-black text-amber-900">{champion.averageScore}</span>
+                            <span className="text-xs text-amber-700 font-semibold">/ 70</span>
+                          </div>
                         </div>
-                        <Badge className="mt-3 bg-amber-500 text-white font-bold">🥇 1st Place (Champion)</Badge>
-                        <h3 className="mt-3 text-xl font-bold text-text-primary">
-                          {champion.team?.name || `${champion.user?.firstName} ${champion.user?.lastName}`}
-                        </h3>
-                        <p className="mt-1 text-sm text-brand-700 font-semibold">{champion.projectName}</p>
-                        <p className="mt-3 text-2xl font-black text-amber-700">{champion.averageScore} / 70</p>
-                      </Card>
-                    </StarBorder>
+                      </StarBorder>
+
+                      {/* Pedestal Step */}
+                      <div className="w-full bg-gradient-to-r from-amber-400 to-yellow-400 border-t border-amber-500 rounded-b-xl py-2.5 text-center text-xs font-extrabold uppercase tracking-wider text-amber-950 shadow-md sm:h-16 flex items-center justify-center">
+                        👑 1st Champion Pedestal
+                      </div>
+                    </div>
                   ) : null}
 
-                  {/* 3rd Place Second Runner-Up */}
+                  {/* 3rd Place (2nd Runner-Up) */}
                   {secondRunnerUp ? (
-                    <Card className="p-6 text-center border-amber-200 bg-amber-50/30 order-3">
-                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-700 text-white shadow-soft">
-                        <Award className="h-7 w-7" />
+                    <div className="order-3 flex flex-col items-center">
+                      <div className="w-full rounded-2xl border border-amber-800/30 bg-gradient-to-b from-orange-50/90 via-white to-amber-50/80 p-6 text-center shadow-md relative overflow-hidden transition-all hover:border-amber-800/50 hover:shadow-lg">
+                        <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-amber-700/20 blur-xl pointer-events-none" />
+
+                        {/* Award Avatar Badge */}
+                        <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-amber-700 to-amber-500 text-white shadow-md ring-4 ring-amber-600/30">
+                          <Award className="h-8 w-8 text-white" />
+                          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-800 text-white font-bold text-xs shadow">
+                            3
+                          </span>
+                        </div>
+
+                        <Badge className="mt-4 bg-amber-100 text-amber-900 border-amber-300 font-bold">
+                          🥉 3rd Place (2nd Runner-Up)
+                        </Badge>
+
+                        <h3 className="mt-3 text-lg font-bold text-text-primary tracking-tight">
+                          {secondRunnerUp.team?.name || `${secondRunnerUp.user?.firstName} ${secondRunnerUp.user?.lastName}`}
+                        </h3>
+                        {secondRunnerUp.user && secondRunnerUp.team?.name ? (
+                          <p className="text-xs text-text-muted mt-0.5">@{secondRunnerUp.user.username}</p>
+                        ) : null}
+
+                        <p className="mt-2 text-sm font-semibold text-brand-700">{secondRunnerUp.projectName}</p>
+
+                        {/* Project Links */}
+                        <div className="mt-3 flex items-center justify-center gap-3 text-xs">
+                          {secondRunnerUp.githubUrl ? (
+                            <a
+                              href={secondRunnerUp.githubUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 font-medium text-text-secondary hover:text-brand-700"
+                            >
+                              <Github className="h-3.5 w-3.5" /> Code
+                            </a>
+                          ) : null}
+                          {secondRunnerUp.demoUrl ? (
+                            <a
+                              href={secondRunnerUp.demoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 font-medium text-brand-700 hover:text-brand-800"
+                            >
+                              <Globe className="h-3.5 w-3.5" /> Demo
+                            </a>
+                          ) : null}
+                        </div>
+
+                        {/* Score Pill */}
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-100/90 px-4 py-2 text-amber-900 border border-amber-300/60">
+                          <span className="text-xs text-amber-700 font-medium">Avg Score:</span>
+                          <span className="text-lg font-black">{secondRunnerUp.averageScore}</span>
+                          <span className="text-xs text-amber-600">/ 70</span>
+                        </div>
                       </div>
-                      <Badge className="mt-3 bg-amber-100 text-amber-900">3rd Place (2nd Runner-Up)</Badge>
-                      <h3 className="mt-3 text-lg font-bold text-text-primary">
-                        {secondRunnerUp.team?.name || `${secondRunnerUp.user?.firstName} ${secondRunnerUp.user?.lastName}`}
-                      </h3>
-                      <p className="mt-1 text-xs text-brand-700 font-semibold">{secondRunnerUp.projectName}</p>
-                      <p className="mt-3 text-xl font-extrabold text-amber-900">{secondRunnerUp.averageScore} / 70</p>
-                    </Card>
+
+                      {/* Pedestal Step */}
+                      <div className="w-full bg-amber-200/90 border-t border-amber-300 rounded-b-xl py-2 text-center text-xs font-bold uppercase tracking-wider text-amber-900 shadow-inner sm:h-10 flex items-center justify-center">
+                        3rd Position
+                      </div>
+                    </div>
                   ) : null}
                 </div>
               </div>

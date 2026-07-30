@@ -26,6 +26,7 @@ import RegistrationModal from '../../components/registration/RegistrationModal';
 import { useAuth } from '../../context/authContext';
 import { formatImageUrl } from '../../utils/format';
 import {
+  getAssignedJudgesRequest,
   getHackathonByIdRequest,
   getRegistrationsRequest,
   registerForHackathonRequest,
@@ -103,6 +104,7 @@ export default function HackathonDetailsPage() {
   const { user, isAuthenticated } = useAuth();
   const [hackathon, setHackathon] = useState(null);
   const [myRegistration, setMyRegistration] = useState(null);
+  const [isAssignedJudge, setIsAssignedJudge] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,9 +116,10 @@ export default function HackathonDetailsPage() {
     const loadHackathon = async () => {
       try {
         setLoading(true);
-        const [hackRes, regRes] = await Promise.all([
+        const [hackRes, regRes, judgeRes] = await Promise.all([
           getHackathonByIdRequest(id),
           isAuthenticated ? getRegistrationsRequest().catch(() => ({ data: { data: [] } })) : Promise.resolve({ data: { data: [] } }),
+          isAuthenticated ? getAssignedJudgesRequest(id).catch(() => ({ data: { data: [] } })) : Promise.resolve({ data: { data: [] } }),
         ]);
 
         if (active) {
@@ -125,6 +128,14 @@ export default function HackathonDetailsPage() {
             (r) => (r.hackathon?._id || r.hackathon) === id
           );
           setMyRegistration(foundReg || null);
+
+          const assignedList = Array.isArray(judgeRes.data?.data) ? judgeRes.data.data : [];
+          const currentUserId = String(user?.id || user?._id || '');
+          const judgeFound = assignedList.some((j) => {
+            const judgeId = String(j.judge?._id || j.judge || '');
+            return judgeId && judgeId === currentUserId;
+          });
+          setIsAssignedJudge(judgeFound);
           setError('');
         }
       } catch (requestError) {
@@ -143,7 +154,7 @@ export default function HackathonDetailsPage() {
     return () => {
       active = false;
     };
-  }, [id, isAuthenticated]);
+  }, [id, isAuthenticated, user]);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -160,6 +171,11 @@ export default function HackathonDetailsPage() {
   const handleRegister = () => {
     if (isHostOrganizer) {
       toast.error('As the host organizer, you manage this event and cannot register as a participant.');
+      return;
+    }
+
+    if (isAssignedJudge) {
+      toast.error('As an assigned judge for this hackathon, you cannot register as a participant.');
       return;
     }
 
@@ -256,6 +272,10 @@ export default function HackathonDetailsPage() {
                     {isHostOrganizer ? (
                       <Badge className="bg-brand-50 text-brand-700 border-brand-200 font-semibold">
                         Host Organizer Workspace
+                      </Badge>
+                    ) : isAssignedJudge ? (
+                      <Badge className="bg-purple-50 text-purple-700 border-purple-200 font-semibold">
+                        Assigned Judge
                       </Badge>
                     ) : myRegistration ? (
                       <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
@@ -423,6 +443,25 @@ export default function HackathonDetailsPage() {
 
                     <Button as={Link} to={`/organizer/hackathons/${hackathon._id}/manage`} size="lg" className="shrink-0">
                       Manage Hackathon
+                    </Button>
+                  </div>
+                </Card>
+              ) : isAssignedJudge ? (
+                <Card className="border-purple-200 bg-purple-50/60 p-6 sm:p-8">
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-purple-700 mb-2">
+                        <ShieldCheck className="h-4 w-4" />
+                        Evaluation Panel Judge
+                      </div>
+                      <h2 className="text-xl font-semibold text-text-primary">You are assigned as a Judge for this hackathon</h2>
+                      <p className="mt-1 text-sm text-text-secondary">
+                        You are part of the evaluation panel for this event and cannot register as a participant due to conflict of interest rules. Access your Judge Panel to evaluate entries.
+                      </p>
+                    </div>
+
+                    <Button as={Link} to="/judge/dashboard" size="lg" className="shrink-0">
+                      Go to Judge Panel
                     </Button>
                   </div>
                 </Card>

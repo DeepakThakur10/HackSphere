@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft,
@@ -10,12 +10,15 @@ import {
   Plus,
   Rocket,
   Send,
+  ShieldAlert,
+  Trophy,
   Video,
   X,
 } from 'lucide-react';
 import PageContainer from '../../components/common/PageContainer';
 import PageHero from '../../components/common/PageHero';
 import FormSection from '../../components/common/FormSection';
+import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import {
   createOrUpdateSubmissionRequest,
@@ -116,10 +119,17 @@ export default function ProjectSubmissionPage() {
     }));
   };
 
+  const isLocked = hackathon?.status === 'completed' || hackathon?.status === 'cancelled';
+
   const handleSubmit = async (event, isSubmit = false) => {
     event.preventDefault();
 
     if (saving) return;
+
+    if (isLocked) {
+      toast.error('Submissions are locked as results have been declared for this hackathon.');
+      return;
+    }
 
     if (!formData.projectName.trim()) {
       toast.error('Project name is required');
@@ -174,6 +184,22 @@ export default function ProjectSubmissionPage() {
         <div className="mx-auto max-w-4xl space-y-8">
           {loading ? (
             <div className="h-64 rounded-2xl bg-surfaceMuted animate-pulse" />
+          ) : isLocked ? (
+            <Card className="p-8 text-center border-amber-300 bg-amber-50/70 space-y-4 shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                <ShieldAlert className="h-7 w-7" />
+              </div>
+              <h3 className="text-xl font-bold text-text-primary">Submissions Locked</h3>
+              <p className="text-sm text-text-secondary max-w-md mx-auto">
+                Submissions for this hackathon are closed as official results have been declared or the competition has ended.
+              </p>
+              <div className="pt-2">
+                <Button as={Link} to={`/hackathons/${hackathonId}/leaderboard`} size="lg" className="gap-2">
+                  <Trophy className="h-4 w-4" />
+                  View Official Leaderboard
+                </Button>
+              </div>
+            </Card>
           ) : (
             <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-8">
               {/* Section 1: Overview */}

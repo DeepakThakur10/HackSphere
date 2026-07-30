@@ -1,6 +1,7 @@
 import { Github, Linkedin, Mail, Twitter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageContainer from '../common/PageContainer';
+import Logo from '../common/Logo';
 import { footerNavigation } from '../../constants/navigation';
 
 const socialLinks = [
@@ -17,10 +18,8 @@ export default function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
           <div>
             <Link to="/" className="inline-flex items-center gap-3 font-semibold text-text-primary">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-600 text-sm font-bold text-white shadow-soft">
-                HS
-              </span>
-              <span className="text-lg tracking-tight">HackSphere</span>
+              <Logo className="h-9 w-auto text-brand-600 drop-shadow-sm" />
+              <span className="text-lg tracking-tight font-bold">HackSphere</span>
             </Link>
             <p className="mt-4 max-w-xl text-sm leading-6 text-text-secondary">
               A polished hackathon platform for teams, judges, and organizers who want a calmer, faster way to run serious events.
