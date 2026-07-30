@@ -4,6 +4,9 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 import PageContainer from '../common/PageContainer';
 import Lightfall from '../visuals/Lightfall';
+import Aurora from '../ui/Aurora';
+import DecryptedText from '../ui/DecryptedText';
+import Magnet from '../ui/Magnet';
 
 const highlights = [
   { icon: Zap, label: 'Launch faster', value: 'Set up events in minutes' },
@@ -14,27 +17,32 @@ const highlights = [
 export default function Hero() {
   return (
     <section className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
-      <PageContainer>
+      <Aurora />
+      <PageContainer className="relative z-10">
         <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="relative">
-            <div className="mb-6 inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700">
+            <div className="mb-6 inline-flex items-center rounded-full border border-brand-100 bg-brand-50/80 backdrop-blur-sm px-4 py-2 text-sm font-medium text-brand-700">
               Premium hackathon operations for modern teams
             </div>
             <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
-              Run hackathons like a product team, not a spreadsheet.
+              Run <DecryptedText text="hackathons" animateOn="both" className="text-brand-600 font-bold" /> like a product team, not a spreadsheet.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-text-secondary">
               HackSphere helps organizers launch beautiful events, manage submissions, review projects, and keep participants informed with a calm, professional experience.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button as={Link} to="/signup" size="lg">
-                Get started free
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button as={Link} to="/hackathons" variant="secondary" size="lg">
-                Explore hackathons
-              </Button>
+              <Magnet magnetStrength={0.25}>
+                <Button as={Link} to="/signup" size="lg">
+                  Get started free
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Magnet>
+              <Magnet magnetStrength={0.25}>
+                <Button as={Link} to="/hackathons" variant="secondary" size="lg">
+                  Explore hackathons
+                </Button>
+              </Magnet>
             </div>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-3">

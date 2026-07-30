@@ -1,4 +1,5 @@
 import Card from '../ui/Card';
+import CountUp from '../ui/CountUp';
 
 export default function StatCard({
   icon: Icon,
@@ -7,6 +8,9 @@ export default function StatCard({
   helpText,
   className = '',
 }) {
+  const numericValue = typeof value === 'number' ? value : parseInt(value, 10);
+  const isNumeric = !isNaN(numericValue);
+
   return (
     <Card className={`p-6 transition hover:shadow-card ${className}`}>
       <div className="flex items-center justify-between gap-4">
@@ -17,7 +21,9 @@ export default function StatCard({
           </div>
         ) : null}
       </div>
-      <p className="mt-4 text-3xl font-semibold tracking-tight text-text-primary">{value}</p>
+      <p className="mt-4 text-3xl font-semibold tracking-tight text-text-primary">
+        {isNumeric ? <CountUp to={numericValue} duration={1.5} /> : value}
+      </p>
       {helpText ? (
         <p className="mt-2 text-xs text-text-secondary">{helpText}</p>
       ) : null}

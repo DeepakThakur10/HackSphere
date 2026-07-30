@@ -21,6 +21,7 @@ import EmptyState from '../../components/common/EmptyState';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import LineSidebar from '../../components/ui/LineSidebar';
 import { getAdminAuditLogsRequest, getAdminDashboardMetricsRequest } from '../../services/api';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -132,11 +133,25 @@ export default function AdminDashboardPage() {
                 title="Console Control Modules"
                 description="Manage user permissions, hackathon lifecycles, and system settings"
               >
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Link
-                    to="/admin/users"
-                    className="group flex items-center justify-between rounded-2xl border border-border bg-white p-5 transition hover:border-brand-200 hover:shadow-card"
-                  >
+                <div className="grid gap-8 lg:grid-cols-3">
+                  <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+                    <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Console Quick Nav</p>
+                    <LineSidebar
+                      items={['Overview', 'User Roster', 'Hackathon Registry', 'Audit Logs', 'Analytics', 'System Settings']}
+                      accentColor="#1d6eeb"
+                      textColor="#64748b"
+                      markerColor="#cbd5e1"
+                      defaultActive={0}
+                      proximityRadius={80}
+                      fontSize={0.95}
+                    />
+                  </div>
+
+                  <div className="space-y-4 lg:col-span-2">
+                    <Link
+                      to="/admin/users"
+                      className="group flex items-center justify-between rounded-2xl border border-border bg-white p-5 transition hover:border-brand-200 hover:shadow-card"
+                    >
                     <div className="flex items-center gap-3">
                       <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
                         <Users className="h-5 w-5" />
@@ -161,7 +176,8 @@ export default function AdminDashboardPage() {
                         <p className="text-xs text-text-secondary">Supervise all hackathons & override lifecycle states</p>
                       </div>
                     </div>
-                  </Link>
+                    </Link>
+                  </div>
                 </div>
               </FormSection>
 

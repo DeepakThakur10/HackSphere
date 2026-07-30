@@ -6,6 +6,7 @@ import PageHero from '../../components/common/PageHero';
 import EmptyState from '../../components/common/EmptyState';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import ElectricBorder from '../../components/ui/ElectricBorder';
 import Badge from '../../components/ui/Badge';
 import { getHackathonsRequest } from '../../services/api';
 
@@ -329,78 +330,79 @@ export default function HackathonsPage() {
             <>
               <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
                 {visibleHackathons.map((hackathon) => (
-                  <Card
-                    key={hackathon.id}
-                    className="group flex h-full flex-col justify-between transition hover:-translate-y-1 hover:shadow-card p-6"
-                  >
-                    <div className="space-y-5">
-                      <div className="flex flex-wrap gap-2">
-                        <Badge>{getStatusLabel(hackathon.status)}</Badge>
-                        <Badge className="bg-surfaceMuted text-text-secondary border-border">{capitalize(hackathon.mode)}</Badge>
-                      </div>
-
-                      <div>
-                        <h2 className="text-xl font-semibold tracking-tight text-text-primary">{hackathon.title}</h2>
-                        <p className="mt-2 text-sm leading-6 text-text-secondary line-clamp-2">{hackathon.description}</p>
-                      </div>
-
-                      <div className="grid gap-3 rounded-2xl border border-border bg-brand-50/30 p-4 text-sm text-text-secondary sm:grid-cols-2">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Organizer</p>
-                          <p className="mt-1 font-medium text-text-primary">{hackathon.organizer}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Location</p>
-                          <p className="mt-1 font-medium text-text-primary">{hackathon.location}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Registration</p>
-                          <p className="mt-1 font-medium text-text-primary">{formatDateRange(hackathon.registrationStart, hackathon.registrationEnd)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Event dates</p>
-                          <p className="mt-1 font-medium text-text-primary">{formatDateRange(hackathon.hackathonStart, hackathon.hackathonEnd)}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between gap-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Prize pool</p>
-                          <p className="text-lg font-semibold text-text-primary">{formatCurrency(hackathon.prizePool)}</p>
-                        </div>
+                  <ElectricBorder key={hackathon.id} color="#1d6eeb" speed={1} chaos={0.12} borderRadius={24} style={{ height: '100%' }}>
+                    <Card
+                      className="group flex h-full flex-col justify-between transition hover:-translate-y-1 hover:shadow-card p-6"
+                    >
+                      <div className="space-y-5">
                         <div className="flex flex-wrap gap-2">
-                          {hackathon.tracks.length > 0 ? (
-                            hackathon.tracks.map((track) => (
-                              <span
-                                key={track}
-                                className="inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700"
-                              >
-                                {track}
+                          <Badge>{getStatusLabel(hackathon.status)}</Badge>
+                          <Badge className="bg-surfaceMuted text-text-secondary border-border">{capitalize(hackathon.mode)}</Badge>
+                        </div>
+
+                        <div>
+                          <h2 className="text-xl font-semibold tracking-tight text-text-primary">{hackathon.title}</h2>
+                          <p className="mt-2 text-sm leading-6 text-text-secondary line-clamp-2">{hackathon.description}</p>
+                        </div>
+
+                        <div className="grid gap-3 rounded-2xl border border-border bg-brand-50/30 p-4 text-sm text-text-secondary sm:grid-cols-2">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Organizer</p>
+                            <p className="mt-1 font-medium text-text-primary">{hackathon.organizer}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Location</p>
+                            <p className="mt-1 font-medium text-text-primary">{hackathon.location}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Registration</p>
+                            <p className="mt-1 font-medium text-text-primary">{formatDateRange(hackathon.registrationStart, hackathon.registrationEnd)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Event dates</p>
+                            <p className="mt-1 font-medium text-text-primary">{formatDateRange(hackathon.hackathonStart, hackathon.hackathonEnd)}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Prize pool</p>
+                            <p className="text-lg font-semibold text-text-primary">{formatCurrency(hackathon.prizePool)}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {hackathon.tracks.length > 0 ? (
+                              hackathon.tracks.map((track) => (
+                                <span
+                                  key={track}
+                                  className="inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700"
+                                >
+                                  {track}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+                                General
                               </span>
-                            ))
-                          ) : (
-                            <span className="inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
-                              General
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="mt-8 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="text-xs text-text-muted">
-                        Updated {dateFormatter.format(new Date(hackathon.createdAt || Date.now()))}
+                      <div className="mt-8 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-xs text-text-muted">
+                          Updated {dateFormatter.format(new Date(hackathon.createdAt || Date.now()))}
+                        </div>
+
+                        <Button
+                          as={Link}
+                          to={`/hackathons/${hackathon.id}`}
+                          size="sm"
+                        >
+                          View details
+                        </Button>
                       </div>
-
-                      <Button
-                        as={Link}
-                        to={`/hackathons/${hackathon.id}`}
-                        size="sm"
-                      >
-                        View details
-                      </Button>
-                    </div>
-                  </Card>
+                    </Card>
+                  </ElectricBorder>
                 ))}
               </div>
 

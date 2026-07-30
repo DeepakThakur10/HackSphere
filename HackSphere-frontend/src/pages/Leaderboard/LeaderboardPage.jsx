@@ -19,6 +19,7 @@ import EmptyState from '../../components/common/EmptyState';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import StarBorder from '../../components/ui/StarBorder';
 import { getLeaderboardRequest } from '../../services/api';
 import { exportLeaderboardToCSV, printPageToPDF } from '../../utils/exportUtils';
 
@@ -154,17 +155,19 @@ export default function LeaderboardPage() {
 
                   {/* 1st Place Champion */}
                   {champion ? (
-                    <Card className="p-8 text-center border-amber-300 bg-amber-50/70 shadow-card order-1 sm:order-2 sm:-mt-4">
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-400 text-white shadow-soft">
-                        <Crown className="h-8 w-8" />
-                      </div>
-                      <Badge className="mt-3 bg-amber-500 text-white font-bold">🥇 1st Place (Champion)</Badge>
-                      <h3 className="mt-3 text-xl font-bold text-text-primary">
-                        {champion.team?.name || `${champion.user?.firstName} ${champion.user?.lastName}`}
-                      </h3>
-                      <p className="mt-1 text-sm text-brand-700 font-semibold">{champion.projectName}</p>
-                      <p className="mt-3 text-2xl font-black text-amber-700">{champion.averageScore} / 70</p>
-                    </Card>
+                    <StarBorder color="#f59e0b" className="order-1 sm:order-2 sm:-mt-4 rounded-2xl">
+                      <Card className="p-8 text-center border-amber-300 bg-amber-50/70 shadow-card">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-400 text-white shadow-soft">
+                          <Crown className="h-8 w-8" />
+                        </div>
+                        <Badge className="mt-3 bg-amber-500 text-white font-bold">🥇 1st Place (Champion)</Badge>
+                        <h3 className="mt-3 text-xl font-bold text-text-primary">
+                          {champion.team?.name || `${champion.user?.firstName} ${champion.user?.lastName}`}
+                        </h3>
+                        <p className="mt-1 text-sm text-brand-700 font-semibold">{champion.projectName}</p>
+                        <p className="mt-3 text-2xl font-black text-amber-700">{champion.averageScore} / 70</p>
+                      </Card>
+                    </StarBorder>
                   ) : null}
 
                   {/* 3rd Place Second Runner-Up */}
